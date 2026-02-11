@@ -1,8 +1,9 @@
 import { Navigation } from "@/components/Navigation";
 import { ParallaxHero } from "@/components/ParallaxHero";
-import { motion } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { Link } from "wouter";
+import { useRef } from "react";
 
 const navCards = [
   {
@@ -80,6 +81,8 @@ export default function Home() {
             </div>
           </div>
         </section>
+        {/* Artist Parallax Image + Bio */}
+        <ArtistSection />
       </main>
 
       <footer className="bg-black py-12 border-t border-white/5">
@@ -91,6 +94,68 @@ export default function Home() {
         </div>
       </footer>
     </div>
+  );
+}
+
+function ArtistSection() {
+  const ref = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start end", "end start"],
+  });
+  const y = useTransform(scrollYProgress, [0, 1], ["-10%", "10%"]);
+
+  return (
+    <section ref={ref}>
+      <div className="relative h-[60vh] md:h-[70vh] overflow-hidden">
+        <motion.img
+          src="https://images.unsplash.com/photo-1590246814883-57c511c5e28a?q=80&w=1600&auto=format&fit=crop"
+          alt="Tony The Witch at work"
+          className="absolute inset-0 w-full h-[120%] object-cover"
+          style={{ y }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/20" />
+        <div className="absolute bottom-8 right-8 md:bottom-12 md:right-12">
+          <div
+            className="w-20 h-20 md:w-24 md:h-24 rounded-full border border-white/30 flex items-center justify-center"
+            data-testid="badge-artist-title"
+          >
+            <span
+              className="text-[8px] md:text-[10px] uppercase tracking-[0.25em] text-white/70 text-center leading-tight"
+              style={{ fontFamily: "var(--font-display)" }}
+            >
+              Tattoo<br />Artist
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-black py-16 md:py-24">
+        <div className="container mx-auto px-4 md:px-6 max-w-3xl">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+          >
+            <p
+              className="text-gray-400 text-sm md:text-base leading-relaxed"
+              style={{ fontFamily: "var(--font-body)" }}
+              data-testid="text-artist-bio"
+            >
+              Meet Tony, a tattoo artist and visual storyteller with a passion for the dark and the
+              sacred. With a background in illustration and fine art, he brings a unique perspective
+              to every piece — blending occult symbolism, botanical elements, and blackwork precision.
+              From intimate script work to full sleeves, Tony has spent the last decade refining his
+              craft across studios in Latin America and beyond. He collaborates closely with each
+              client to create meaningful, one-of-a-kind tattoos that carry deep personal significance.
+              Currently based in his private studio, Tony is available for bookings and custom
+              commissions worldwide.
+            </p>
+          </motion.div>
+        </div>
+      </div>
+    </section>
   );
 }
 
