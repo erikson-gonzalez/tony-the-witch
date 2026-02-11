@@ -31,7 +31,7 @@ const navCards = [
     subtitle: "@tonythewitch",
     href: "https://instagram.com/tonythewitch",
     external: true,
-    image: "https://images.unsplash.com/photo-1598371839696-5c5bb1bddec5?q=80&w=800&auto=format&fit=crop",
+    image: "https://images.unsplash.com/photo-1565058379802-bbe93b2f703a?q=80&w=800&auto=format&fit=crop",
   },
 ];
 
