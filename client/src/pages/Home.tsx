@@ -46,7 +46,7 @@ export default function Home() {
         {/* Navigation Cards Grid */}
         <section className="py-16 md:py-24 bg-black">
           <div className="container mx-auto px-4 md:px-6">
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 items-start">
               {navCards.map((card, index) => (
                 <motion.div
                   key={card.title}
@@ -54,6 +54,7 @@ export default function Home() {
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6, delay: index * 0.1 }}
                   viewport={{ once: true }}
+                  className={index % 2 === 1 ? "mt-12 md:mt-20" : ""}
                 >
                   {card.external ? (
                     <a
