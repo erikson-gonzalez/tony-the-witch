@@ -1,6 +1,6 @@
 import { Navigation } from "@/components/Navigation";
 import { Gallery } from "@/components/Gallery";
-import { BookingForm } from "@/components/BookingForm";
+import { Footer } from "@/components/Footer";
 import { motion } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import { Link } from "wouter";
@@ -25,17 +25,9 @@ export default function Portfolio() {
         </div>
 
         <Gallery />
-        <BookingForm />
       </main>
 
-      <footer className="bg-black py-12 border-t border-white/5">
-        <div className="container mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-6">
-          <div style={{ fontFamily: "var(--font-display)" }} className="text-2xl font-bold tracking-wider">TTW</div>
-          <div className="text-gray-600 text-sm">
-            &copy; {new Date().getFullYear()} Tony The Witch. All rights reserved.
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }
