@@ -1,0 +1,319 @@
+He analizado completamente la página andyhardy.co y aquí te presento una guía detallada para crear un copycat de sus efectos parallax.
+
+📊 PALETA DE COLORES
+Color Primario (Fondo):           #000000 (Negro puro)
+Texto Principal:                  #FFFFFF (Blanco)
+Texto Secundario:                 rgba(255, 255, 255, 0.6-0.7) (Blanco con transparencia)
+Botones (Fondo):                  #FFFFFF
+Botones (Texto):                  #000000
+Secciones/Cards:                  #252525 (Gris oscuro)
+
+Gradientes de Fade:
+- Inferior: linear-gradient(to top, black 0%, rgba(0, 0, 0, 0.738) 19%, ... transparent 100%)
+- Superior: linear-gradient(to bottom, black 0%, rgba(0, 0, 0, 0.738) 19%, ... transparent 100%)
+- Lateral: linear-gradient(270deg, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 100%)
+Tipografía:
+
+Silka-Regular, Silka-Medium, Silka-SemiBold
+SilkaMono-Regular, SilkaMono-Medium (para textos pequeños y uppercase)
+
+
+🔧 CÓMO SE IMPLEMENTA EL PARALLAX
+Técnica Principal: jQuery + CSS Transform3D
+La página usa una técnica muy elegante y eficiente basada en jQuery que manipula la posición Y de elementos al hacer scroll.
+Archivo: parallax.js (El corazón del efecto)
+javascript$(window).scroll(function() {
+    var scrollTop = $(window).scrollTop();
+    $('.parallax-layer').each(function() {
+        var layer = $(this);
+        var dataSpeed = layer.data('speed');
+        var offsetY = -(scrollTop * dataSpeed);
+        var translate = 'translate3d(0, ' + offsetY + 'px, 0)';
+        
+        layer.css('-webkit-transform', translate);
+        layer.css('-moz-transform', translate);
+        layer.css('-ms-transform', translate);
+        layer.css('-o-transform', translate);
+        layer.css('transform', translate);
+    })
+});
+¿Cómo funciona?
+
+Detecta el scroll del usuario con $(window).scrollTop()
+Busca todos los elementos con clase .parallax-layer
+Lee el atributo data-speed de cada elemento (velocidad de parallax)
+Calcula el desplazamiento: offsetY = -(scrollTop * dataSpeed)
+Aplica una transformación CSS 3D para mover el elemento
+
+
+💻 ESTRUCTURA HTML
+Estructura Básica del Header con Parallax
+html<header>
+    <div class="parallax desktop">
+        <!-- Capa 1: Imagen de fondo (parallax lento) -->
+        <div class="layer parallax-layer fade-in appear" 
+             data-speed="0.3">
+            <img src="mountain-bg.jpg" alt="Background">
+        </div>
+        
+        <!-- Capa 2: Contenido (parallax medio) -->
+        <div class="layer parallax-layer fade-in appear" 
+             data-speed="0.5">
+            <img src="foreground-element.png" alt="Foreground">
+        </div>
+        
+        <!-- Capa 3: Texto principal (parallax rápido o sin parallax) -->
+        <div class="layer parallax-layer fade-in appear" 
+             data-speed="0.8">
+            <h1>ANDY!</h1>
+        </div>
+        
+        <!-- Gradientes de fade para profundidad -->
+        <div class="bottom-fade"></div>
+        <div class="top-fade"></div>
+        
+        <!-- Información ubicación -->
+        <div class="location">
+            <svg><!-- Location icon --></svg>
+            <span>37.8136° S, 144.9631° E</span>
+        </div>
+        
+        <!-- Información inferior derecha -->
+        <div class="right-bottom-text">
+            <span>Creating films in Melbourne / Bright</span>
+        </div>
+    </div>
+</header>
+Puntos clave:
+
+Cada capa tiene data-speed (controla la velocidad del parallax)
+data-speed="0.3" = movimiento lento (fondo lejano)
+data-speed="0.8" = movimiento más rápido (foreground cercano)
+Las clases fade-in y appear controlan animaciones de entrada
+Los gradientes .bottom-fade y .top-fade crean profundidad
+
+
+🎯 CSS ESENCIAL
+Estilos del Parallax Container
+cssheader {
+    height: 100vh;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+}
+
+header .parallax {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+}
+
+header .parallax .layer {
+    position: absolute;
+    width: 100%;
+    height: 100vh;
+    /* El parallax.js aplica transform3d aquí */
+}
+
+/* Gradientes para crear efecto de profundidad */
+header .bottom-fade {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 50vh;
+    z-index: 2;
+    background: linear-gradient(
+        to top, 
+        black 0%, 
+        rgba(0, 0, 0, 0.738) 19%, 
+        rgba(0, 0, 0, 0.541) 34%, 
+        transparent 100%
+    );
+}
+
+header .top-fade {
+    position: absolute;
+    top: 0;
+    width: 100%;
+    height: 30vh;
+    z-index: 2;
+    background: linear-gradient(
+        to bottom, 
+        black 0%, 
+        rgba(0, 0, 0, 0.738) 19%, 
+        transparent 100%
+    );
+    opacity: 0.2;
+}
+
+/* Animaciones de entrada (fade-in) */
+header .parallax .layer.fade-in {
+    transition: top 1s cubic-bezier(0.87, 0, 0.13, 1), 
+                opacity 1s cubic-bezier(0.87, 0, 0.13, 1);
+    top: 100px;
+    transition-delay: 1.5s;
+    opacity: 0;
+}
+
+header .parallax .layer.fade-in.appear {
+    top: 0;
+    opacity: 1;
+}
+Estilos de Posicionamiento
+cssheader .location {
+    position: absolute;
+    bottom: 40px;
+    left: 40px;
+    z-index: 3;
+}
+
+header .right-bottom-text {
+    position: absolute;
+    bottom: 40px;
+    right: 40px;
+    z-index: 3;
+}
+
+/* Animación del icono de ubicación */
+header .location svg {
+    -webkit-animation: location-rotate 2s ease-in-out infinite;
+    animation: location-rotate 2s ease-in-out infinite;
+}
+
+@keyframes location-rotate {
+    0% { transform: rotate(0deg); }
+    75% { transform: rotate(360deg); }
+    100% { transform: rotate(360deg); }
+}
+
+📱 RESPONSIVE DESIGN
+css@media screen and (max-width: 640px) {
+    header {
+        height: 85vh;
+    }
+    
+    header .parallax {
+        height: 85vh;
+    }
+    
+    header .parallax .layer {
+        height: 85vh;
+    }
+    
+    header .location {
+        left: 50%;
+        transform: translate(-50%, 0);
+    }
+    
+    header .right-bottom-text {
+        display: none;
+    }
+}
+
+🚀 LIBRERÍAS REQUERIDAS
+html<!-- jQuery (requerido para el script de parallax) -->
+<script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+
+<!-- Script de parallax personalizado -->
+<script src="assets/js/parallax.js"></script>
+
+<!-- Otros scripts utilizados en la página -->
+<script src="assets/js/navigation.js"></script>
+<script src="assets/js/observers.js"></script>
+<script src="assets/js/cookies.js"></script>
+
+🎬 CÓMO IMPLEMENTARLO PASO A PASO
+Paso 1: Crear el HTML
+html<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width">
+    <title>Mi Parallax Portfolio</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <div class="parallax">
+            <div class="layer parallax-layer" data-speed="0.3">
+                <img src="background.jpg" alt="Background">
+            </div>
+            <div class="layer parallax-layer" data-speed="0.5">
+                <img src="foreground.png" alt="Foreground">
+            </div>
+            <div class="layer parallax-layer" data-speed="0.8">
+                <h1>MI PROYECTO</h1>
+            </div>
+            <div class="bottom-fade"></div>
+        </div>
+    </header>
+    
+    <script src="jquery.js"></script>
+    <script src="parallax.js"></script>
+</body>
+</html>
+Paso 2: Crear el CSS (styles.css)
+Usa los estilos compartidos arriba. Ajusta los valores según tu diseño.
+Paso 3: Crear/incluir el JavaScript (parallax.js)
+Copia el código de parallax.js mostrado arriba.
+Paso 4: Optimizaciones
+Para mejor rendimiento, puedes añadir throttling:
+javascriptvar ticking = false;
+
+$(window).scroll(function() {
+    if (!ticking) {
+        window.requestAnimationFrame(function() {
+            updateParallax();
+            ticking = false;
+        });
+        ticking = true;
+    }
+});
+
+function updateParallax() {
+    var scrollTop = $(window).scrollTop();
+    $('.parallax-layer').each(function() {
+        var layer = $(this);
+        var dataSpeed = layer.data('speed');
+        var offsetY = -(scrollTop * dataSpeed);
+        layer.css('transform', 'translate3d(0, ' + offsetY + 'px, 0)');
+    });
+}
+```
+
+---
+
+## 🎨 VARIACIONES DE VELOCIDAD RECOMENDADAS
+```
+Elemento                    data-speed
+─────────────────────────────────────
+Fondo lejano (montañas)      0.2 - 0.3    (muy lento)
+Elemento intermedio           0.4 - 0.5    (moderado)
+Foreground cercano            0.6 - 0.7    (rápido)
+Texto principal               0.8 - 1.0    (muy rápido o sin parallax)
+
+⚡ CARACTERÍSTICAS ADICIONALES
+1. Sistema de Fade-In (Animación de Entrada)
+Las capas aparecen con animación suave al cargar:
+
+Comienzan con opacity: 0 y top: 100px
+Se animan a opacity: 1 y top: 0 con delay de 1.5s
+Usa cubic-bezier para movimiento natural
+
+2. Gradientes Estratégicos
+
+Bottom fade: Oscurece hacia abajo (foco en el contenido)
+Top fade: Oscurece hacia arriba (sutileza)
+Crean separación visual entre capas
+
+3. Social Icons (Lateral)
+css.social-ico-block {
+    position: fixed;
+    right: 40px;
+    top: 50vh;
+    z-index: 25;
+    transform: translate(0, -50%);
+}
+
+📝 RESUMEN TÉCNICO
+AspectoTécnicaMotor de ParallaxjQuery + CSS Transform3DMétodo de cálculoscroll * velocidadPropiedades CSStransform: translate3d()AnimacionesCSS transitions + cubic-bezierResponsiveMedia queries a 640pxPerformanceRequestAnimationFrame (opcional)
