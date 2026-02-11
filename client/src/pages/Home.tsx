@@ -107,9 +107,9 @@ function ArtistSection() {
 
   return (
     <section ref={ref}>
-      <div className="relative h-[60vh] md:h-[70vh] overflow-hidden">
+      <div className="relative h-[36vh] md:h-[42vh] overflow-hidden">
         <motion.img
-          src="https://images.unsplash.com/photo-1581783898377-1c85bf937427?q=80&w=1600&auto=format&fit=crop"
+          src="https://images.unsplash.com/photo-1562962230-16e4623d36e6?q=80&w=1600&auto=format&fit=crop"
           alt="Tony The Witch at work"
           className="absolute inset-0 w-full h-[120%] object-cover"
           style={{ y }}
