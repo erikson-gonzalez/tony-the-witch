@@ -31,7 +31,7 @@ const navCards = [
     subtitle: "@tonythewitch",
     href: "https://instagram.com/tonythewitch",
     external: true,
-    image: "https://images.unsplash.com/photo-1590246130725-2c801d9f041b?q=80&w=800&auto=format&fit=crop",
+    image: "https://images.unsplash.com/photo-1598371839696-5c5bb1bddec5?q=80&w=800&auto=format&fit=crop",
   },
 ];
 
@@ -42,20 +42,6 @@ export default function Home() {
 
       <main>
         <ParallaxHero />
-
-        {/* Featured Image */}
-        <section className="bg-black">
-          <div className="container mx-auto px-4 md:px-6">
-            <div className="relative w-full aspect-[16/9] overflow-hidden">
-              <img
-                src="https://images.unsplash.com/photo-1598371839696-5c5bb1bddec5?q=80&w=1600&auto=format&fit=crop"
-                alt="Tony The Witch - Tattoo Art"
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/30" />
-            </div>
-          </div>
-        </section>
 
         {/* Navigation Cards Grid */}
         <section className="py-16 md:py-24 bg-black">
