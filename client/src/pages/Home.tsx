@@ -17,8 +17,8 @@ const navCards = [
   {
     title: "Shop",
     subtitle: "Merch & Prints",
-    href: "#",
-    external: true,
+    href: "/shop",
+    external: false,
     image: "https://images.unsplash.com/photo-1542848284-8afa78a08ccb?q=80&w=800&auto=format&fit=crop",
   },
   {

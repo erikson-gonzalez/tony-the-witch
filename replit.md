@@ -12,7 +12,7 @@ Preferred communication style: Simple, everyday language.
 
 ### Frontend
 - **Framework**: React 18 with TypeScript, bundled by Vite
-- **Routing**: Wouter (lightweight client-side router) with two main routes: `/` (Home) and `/portfolio` (Portfolio)
+- **Routing**: Wouter (lightweight client-side router) with routes: `/` (Home), `/portfolio` (Portfolio), `/shop` (Shop), `/shop/:slug` (Product Detail), `/cart` (Cart). ScrollToTop component resets scroll on navigation.
 - **Styling**: Tailwind CSS with CSS custom properties for theming. Strictly dark mode — black background (#000), white text. Sharp edges (border-radius: 0) for a raw/gothic feel
 - **UI Components**: shadcn/ui (new-york style) built on Radix UI primitives, stored in `client/src/components/ui/`
 - **Animations**: Framer Motion for parallax scroll effects using `useScroll` and `useTransform` hooks
@@ -43,6 +43,8 @@ Preferred communication style: Simple, everyday language.
 1. **Shared schemas between client and server**: Zod schemas defined once in `shared/` are used for both client-side form validation and server-side request validation, ensuring type safety across the stack
 2. **No authentication**: This is a public portfolio site; the only write operation is the inquiry form submission
 3. **Minimal API surface**: Only one endpoint exists. The site is primarily a static presentation layer with a single form submission feature
+5. **Client-side shop**: Product data is static (in `client/src/lib/products.ts`), cart state managed via React Context + localStorage (`client/src/lib/cart.tsx`). No backend needed for shop
+6. **Shared Footer**: Reusable `Footer` component (`client/src/components/Footer.tsx`) used across all pages
 4. **Vite middleware in dev**: Instead of running separate dev servers, Vite runs as Express middleware, simplifying the development workflow
 
 ## External Dependencies
