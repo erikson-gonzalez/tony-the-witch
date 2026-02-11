@@ -45,7 +45,7 @@ export default function Home() {
         <ParallaxHero />
 
         {/* Navigation Cards Grid */}
-        <section className="py-16 md:py-24 bg-black">
+        <section className="py-16 md:py-32 bg-black">
           <div className="container mx-auto px-4 md:px-6">
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 items-start">
               {navCards.map((card, index) => (
