@@ -82,6 +82,7 @@ export default function Home() {
           </div>
         </section>
         {/* Artist Parallax Image + Bio */}
+        <div className="pt-16 md:pt-32" />
         <ArtistSection />
       </main>
 
