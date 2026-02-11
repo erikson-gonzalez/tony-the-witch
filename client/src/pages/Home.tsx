@@ -93,7 +93,7 @@ export default function Home() {
             alt="Tony The Witch"
             className="absolute inset-0 w-full h-full object-cover opacity-50"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-black via-black/70 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-black from-30% via-black/80 via-60% to-black/30" />
           <div className="absolute inset-0 flex flex-col items-center justify-center z-10 px-4">
             <a
               href="https://wa.me/1234567890"
