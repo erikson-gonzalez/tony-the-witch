@@ -16,14 +16,6 @@ export function Navigation() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const scrollToSection = (id: string) => {
-    setIsOpen(false);
-    const element = document.getElementById(id);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth" });
-    }
-  };
-
   return (
     <>
       <header
@@ -32,41 +24,33 @@ export function Navigation() {
           isScrolled ? "bg-black/90 backdrop-blur-md border-white/5 py-4" : "bg-transparent py-6"
         )}
       >
-        <div className="container mx-auto px-6 flex items-center justify-between">
-          <Link href="/" className="font-display text-xl tracking-wider font-bold text-white z-50 relative">
+        <div className="container mx-auto px-6 flex items-center justify-between gap-4">
+          <Link href="/" className="font-display text-xl tracking-wider font-bold text-white z-50 relative" data-testid="link-home-logo">
             TTW
           </Link>
 
-          {/* Desktop Nav */}
           <nav className="hidden md:flex items-center space-x-12">
-            {["Work", "Artist", "Contact"].map((item) => (
-              <button
-                key={item}
-                onClick={() => scrollToSection(item.toLowerCase())}
-                className="text-sm uppercase tracking-widest text-gray-400 hover:text-white transition-colors duration-300"
-              >
-                {item}
-              </button>
-            ))}
-            <button
-              onClick={() => scrollToSection('contact')}
-              className="px-6 py-2 border border-white/20 hover:bg-white hover:text-black transition-all duration-300 text-xs uppercase tracking-widest"
-            >
-              Book Now
-            </button>
+            <Link href="/portfolio" className="text-sm uppercase tracking-widest text-gray-400 hover:text-white transition-colors duration-300" data-testid="link-nav-portfolio">
+              Portfolio
+            </Link>
+            <a href="https://wa.me/1234567890" target="_blank" rel="noopener noreferrer" className="text-sm uppercase tracking-widest text-gray-400 hover:text-white transition-colors duration-300" data-testid="link-nav-contact">
+              Contact
+            </a>
+            <a href="https://instagram.com/tonythewitch" target="_blank" rel="noopener noreferrer" className="text-sm uppercase tracking-widest text-gray-400 hover:text-white transition-colors duration-300" data-testid="link-nav-instagram">
+              Instagram
+            </a>
           </nav>
 
-          {/* Mobile Menu Toggle */}
           <button
             className="md:hidden text-white z-50 relative"
             onClick={() => setIsOpen(!isOpen)}
+            data-testid="button-mobile-menu"
           >
             {isOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
         </div>
       </header>
 
-      {/* Mobile Menu Overlay */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -76,15 +60,15 @@ export function Navigation() {
             className="fixed inset-0 bg-black z-40 flex items-center justify-center md:hidden"
           >
             <nav className="flex flex-col items-center space-y-8">
-              {["Work", "Artist", "Contact"].map((item) => (
-                <button
-                  key={item}
-                  onClick={() => scrollToSection(item.toLowerCase())}
-                  className="text-2xl font-display text-white hover:text-gray-400 transition-colors"
-                >
-                  {item}
-                </button>
-              ))}
+              <Link href="/portfolio" onClick={() => setIsOpen(false)} className="text-2xl text-white hover:text-gray-400 transition-colors" style={{ fontFamily: "var(--font-display)" }} data-testid="link-mobile-portfolio">
+                Portfolio
+              </Link>
+              <a href="https://wa.me/1234567890" target="_blank" rel="noopener noreferrer" onClick={() => setIsOpen(false)} className="text-2xl text-white hover:text-gray-400 transition-colors" style={{ fontFamily: "var(--font-display)" }} data-testid="link-mobile-contact">
+                Contact
+              </a>
+              <a href="https://instagram.com/tonythewitch" target="_blank" rel="noopener noreferrer" onClick={() => setIsOpen(false)} className="text-2xl text-white hover:text-gray-400 transition-colors" style={{ fontFamily: "var(--font-display)" }} data-testid="link-mobile-instagram">
+                Instagram
+              </a>
             </nav>
           </motion.div>
         )}

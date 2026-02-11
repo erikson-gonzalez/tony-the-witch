@@ -141,8 +141,9 @@ export function BookingForm() {
 
               <Button 
                 type="submit" 
-                className="w-full h-14 bg-white text-black hover:bg-gray-200"
+                className="w-full bg-white text-black"
                 disabled={isPending}
+                data-testid="button-submit-inquiry"
               >
                 {isPending ? "Sending Request..." : "Submit Inquiry"}
               </Button>

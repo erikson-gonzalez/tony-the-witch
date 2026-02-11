@@ -83,10 +83,11 @@ export function Gallery() {
 
         <div className="text-center mt-16">
           <a 
-            href="https://instagram.com" 
+            href="https://instagram.com/tonythewitch" 
             target="_blank" 
             rel="noopener noreferrer"
             className="inline-block text-sm uppercase tracking-widest border-b border-white/30 pb-1 hover:border-white transition-colors text-gray-400 hover:text-white"
+            data-testid="link-gallery-instagram"
           >
             View More on Instagram
           </a>
