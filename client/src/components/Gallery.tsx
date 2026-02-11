@@ -2,79 +2,79 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Eye, X } from "lucide-react";
 
-const categories = ["All", "Blackwork", "Fine Line", "Traditional", "Realism"] as const;
+const categories = ["All", "Tatuajes", "Pinturas", "Cinematografía"] as const;
 
 const allWorks = [
   {
     id: 1,
     image: "https://images.unsplash.com/photo-1611501275019-9b5cda994e8d?q=80&w=1200&auto=format&fit=crop",
-    category: "Fine Line",
+    category: "Tatuajes",
     height: "tall",
   },
   {
     id: 2,
     image: "https://images.unsplash.com/photo-1562962230-16e4623d36e6?q=80&w=1200&auto=format&fit=crop",
-    category: "Blackwork",
+    category: "Pinturas",
     height: "short",
   },
   {
     id: 3,
     image: "https://images.unsplash.com/photo-1542848284-8afa78a08ccb?q=80&w=1200&auto=format&fit=crop",
-    category: "Traditional",
+    category: "Cinematografía",
     height: "medium",
   },
   {
     id: 4,
     image: "https://images.unsplash.com/photo-1568515045052-f9a854d70bfd?q=80&w=1200&auto=format&fit=crop",
-    category: "Blackwork",
+    category: "Tatuajes",
     height: "tall",
   },
   {
     id: 5,
     image: "https://images.unsplash.com/photo-1565058379802-bbe93b2f703a?q=80&w=1200&auto=format&fit=crop",
-    category: "Realism",
+    category: "Pinturas",
     height: "short",
   },
   {
     id: 6,
     image: "https://images.unsplash.com/photo-1598371839696-5c5bb3524346?q=80&w=1200&auto=format&fit=crop",
-    category: "Blackwork",
+    category: "Tatuajes",
     height: "medium",
   },
   {
     id: 7,
     image: "https://images.unsplash.com/photo-1581783898377-1c85bf937427?q=80&w=1200&auto=format&fit=crop",
-    category: "Traditional",
+    category: "Cinematografía",
     height: "tall",
   },
   {
     id: 8,
     image: "https://images.unsplash.com/photo-1611501275019-9b5cda994e8d?q=80&w=800&auto=format&fit=crop",
-    category: "Fine Line",
+    category: "Pinturas",
     height: "medium",
   },
   {
     id: 9,
     image: "https://images.unsplash.com/photo-1562962230-16e4623d36e6?q=80&w=800&auto=format&fit=crop",
-    category: "Realism",
+    category: "Tatuajes",
     height: "short",
   },
   {
     id: 10,
     image: "https://images.unsplash.com/photo-1542848284-8afa78a08ccb?q=80&w=800&auto=format&fit=crop",
-    category: "Blackwork",
+    category: "Cinematografía",
     height: "tall",
   },
   {
     id: 11,
     image: "https://images.unsplash.com/photo-1568515045052-f9a854d70bfd?q=80&w=800&auto=format&fit=crop",
-    category: "Fine Line",
+    category: "Pinturas",
     height: "medium",
   },
   {
     id: 12,
     image: "https://images.unsplash.com/photo-1565058379802-bbe93b2f703a?q=80&w=800&auto=format&fit=crop",
-    category: "Traditional",
+    category: "Tatuajes",
     height: "short",
   },
 ];
