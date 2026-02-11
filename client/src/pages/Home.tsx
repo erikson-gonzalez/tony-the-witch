@@ -94,6 +94,7 @@ export default function Home() {
             className="absolute inset-0 w-full h-full object-cover opacity-50"
           />
           <div className="absolute inset-0 bg-gradient-to-r from-black from-30% via-black/80 via-60% to-black/30" />
+          <div className="absolute inset-x-0 top-0 h-1/3 bg-gradient-to-b from-black to-transparent" />
           <div className="absolute inset-0 flex flex-col items-center justify-center z-10 px-4">
             <a
               href="https://wa.me/1234567890"
