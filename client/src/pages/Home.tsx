@@ -87,13 +87,13 @@ export default function Home() {
       </main>
 
       <footer className="relative">
-        <div className="relative h-[40vh] md:h-[50vh] overflow-hidden">
+        <div className="relative h-[28vh] md:h-[35vh] overflow-hidden">
           <img
             src="https://images.unsplash.com/photo-1611501275019-9b5cda994e8d?q=80&w=1600&auto=format&fit=crop"
             alt="Tony The Witch"
-            className="absolute inset-0 w-full h-full object-cover opacity-40"
+            className="absolute inset-0 w-full h-full object-cover opacity-50"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-black/30" />
+          <div className="absolute inset-0 bg-gradient-to-r from-black via-black/70 to-transparent" />
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-6 z-10 px-4">
             <a
               href="https://wa.me/1234567890"
