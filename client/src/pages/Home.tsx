@@ -1,184 +1,53 @@
 import { Navigation } from "@/components/Navigation";
 import { ParallaxHero } from "@/components/ParallaxHero";
 import { Footer } from "@/components/Footer";
-import { motion, useScroll, useTransform } from "framer-motion";
-import { ArrowRight, ArrowUpRight } from "lucide-react";
-import { Link } from "wouter";
-import { useRef } from "react";
-
-const navCards = [
-  {
-    title: "View Portfolio",
-    subtitle: "Selected Works",
-    href: "/portfolio",
-    external: false,
-    image: "https://images.unsplash.com/photo-1611501275019-9b5cda994e8d?q=80&w=800&auto=format&fit=crop",
-  },
-  {
-    title: "Shop",
-    subtitle: "Merch & Prints",
-    href: "/shop",
-    external: false,
-    image: "https://images.unsplash.com/photo-1542848284-8afa78a08ccb?q=80&w=800&auto=format&fit=crop",
-  },
-  {
-    title: "Contact",
-    subtitle: "WhatsApp",
-    href: "https://wa.me/1234567890",
-    external: true,
-    image: "https://images.unsplash.com/photo-1568515045052-f9a854d70bfd?q=80&w=800&auto=format&fit=crop",
-  },
-  {
-    title: "Instagram",
-    subtitle: "@tonythewitch",
-    href: "https://instagram.com/tonythewitch",
-    external: true,
-    image: "https://images.unsplash.com/photo-1565058379802-bbe93b2f703a?q=80&w=800&auto=format&fit=crop",
-  },
-];
+import { NavCardComponent } from "@/components/home/nav-card";
+import { ArtistSection } from "@/components/home/artist-section";
+import { useContent } from "@/hooks/use-content";
+import { motion } from "framer-motion";
 
 export default function Home() {
+  const { navCards, isLoading } = useContent();
+
+  if (isLoading) {
+    return (
+      <div className="bg-black min-h-screen text-white flex items-center justify-center">
+        <div className="w-8 h-8 border border-white/30 border-t-white animate-spin rounded-full" />
+      </div>
+    );
+  }
+
   return (
-    <div className="bg-black min-h-screen text-white selection:bg-white selection:text-black">
+    <div className="bg-black min-h-screen text-white selection:bg-white selection:text-black flex flex-col">
       <Navigation />
 
-      <main>
+      <main className="flex-1">
         <ParallaxHero />
 
-        {/* Navigation Cards Grid */}
         <section className="py-16 md:py-32 bg-black">
           <div className="container mx-auto px-4 md:px-6">
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 items-start">
               {navCards.map((card, index) => (
                 <motion.div
-                  key={card.title}
+                  key={card.id}
                   initial={{ opacity: 0, y: 30 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6, delay: index * 0.1 }}
                   viewport={{ once: true }}
                   className={index % 2 === 1 ? "mt-12 md:mt-20" : ""}
                 >
-                  {card.external ? (
-                    <a
-                      href={card.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      data-testid={`link-nav-card-${card.title.toLowerCase().replace(/\s/g, '-')}`}
-                      className="group block relative aspect-[3/4] overflow-hidden bg-neutral-900 cursor-pointer"
-                    >
-                      <CardContent card={card} />
-                    </a>
-                  ) : (
-                    <Link
-                      href={card.href}
-                      data-testid={`link-nav-card-${card.title.toLowerCase().replace(/\s/g, '-')}`}
-                      className="group block relative aspect-[3/4] overflow-hidden bg-neutral-900 cursor-pointer"
-                    >
-                      <CardContent card={card} />
-                    </Link>
-                  )}
+                  <NavCardComponent card={card} index={index} />
                 </motion.div>
               ))}
             </div>
           </div>
         </section>
-        {/* Artist Parallax Image + Bio */}
+
         <div className="pt-16 md:pt-32" />
         <ArtistSection />
       </main>
 
       <Footer />
     </div>
-  );
-}
-
-function ArtistSection() {
-  const ref = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ["start end", "end start"],
-  });
-  const y = useTransform(scrollYProgress, [0, 1], ["-10%", "10%"]);
-
-  return (
-    <section ref={ref}>
-      <div className="relative h-[36vh] md:h-[42vh] overflow-hidden">
-        <motion.img
-          src="https://images.unsplash.com/photo-1562962230-16e4623d36e6?q=80&w=1600&auto=format&fit=crop"
-          alt="Tony The Witch at work"
-          className="absolute inset-0 w-full h-[120%] object-cover"
-          style={{ y }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/20" />
-        <div className="absolute bottom-8 right-8 md:bottom-12 md:right-12">
-          <div
-            className="w-20 h-20 md:w-24 md:h-24 rounded-full border border-white/30 flex items-center justify-center"
-            data-testid="badge-artist-title"
-          >
-            <span
-              className="text-[8px] md:text-[10px] uppercase tracking-[0.25em] text-white/70 text-center leading-tight"
-              style={{ fontFamily: "var(--font-display)" }}
-            >
-              Tattoo<br />Artist
-            </span>
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-black py-16 md:py-24">
-        <div className="container mx-auto px-4 md:px-6 max-w-3xl">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            viewport={{ once: true }}
-          >
-            <p
-              className="text-gray-400 text-sm md:text-base leading-relaxed"
-              style={{ fontFamily: "var(--font-body)" }}
-              data-testid="text-artist-bio"
-            >
-              Meet Tony, a tattoo artist and visual storyteller with a passion for the dark and the
-              sacred. With a background in illustration and fine art, he brings a unique perspective
-              to every piece — blending occult symbolism, botanical elements, and blackwork precision.
-              From intimate script work to full sleeves, Tony has spent the last decade refining his
-              craft across studios in Latin America and beyond. He collaborates closely with each
-              client to create meaningful, one-of-a-kind tattoos that carry deep personal significance.
-              Currently based in his private studio, Tony is available for bookings and custom
-              commissions worldwide.
-            </p>
-          </motion.div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function CardContent({ card }: { card: typeof navCards[number] }) {
-  const isExternal = card.external;
-  return (
-    <>
-      <img
-        src={card.image}
-        alt={card.title}
-        className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 opacity-60 group-hover:opacity-80"
-      />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-      <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6 z-10">
-        <span className="text-[10px] md:text-xs uppercase tracking-widest text-gray-400 block mb-1">
-          {card.subtitle}
-        </span>
-        <div className="flex items-center gap-2">
-          <span className="text-sm md:text-base uppercase tracking-widest text-white font-medium">
-            {card.title}
-          </span>
-          {isExternal ? (
-            <ArrowUpRight size={14} className="text-white/70 group-hover:text-white transition-colors" />
-          ) : (
-            <ArrowRight size={14} className="text-white/70 group-hover:translate-x-1 group-hover:text-white transition-all" />
-          )}
-        </div>
-      </div>
-    </>
   );
 }

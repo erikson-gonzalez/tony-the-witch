@@ -1,0 +1,70 @@
+import passport from "passport";
+import { Strategy as LocalStrategy } from "passport-local";
+import session from "express-session";
+import connectPg from "connect-pg-simple";
+import type { Request, Response, NextFunction } from "express";
+import bcrypt from "bcryptjs";
+import { getAdminUserByUsername } from "./storage-admin";
+import { pool } from "./db";
+
+const SESSION_SECRET =
+  process.env.SESSION_SECRET || "ttw-admin-secret-change-in-production";
+
+declare global {
+  namespace Express {
+    interface User {
+      id: number;
+      username: string;
+    }
+  }
+}
+
+export function setupPassport() {
+  passport.use(
+    new LocalStrategy(async (username, password, done) => {
+      try {
+        const user = await getAdminUserByUsername(username);
+        if (!user) return done(null, false, { message: "Invalid credentials" });
+
+        const valid = await bcrypt.compare(password, user.passwordHash);
+        if (!valid) return done(null, false, { message: "Invalid credentials" });
+
+        return done(null, { id: user.id, username: user.username });
+      } catch (err) {
+        return done(err);
+      }
+    })
+  );
+
+  passport.serializeUser((user: Express.User, done) => {
+    done(null, user);
+  });
+
+  passport.deserializeUser((user: Express.User, done) => {
+    done(null, user);
+  });
+}
+
+export function getSessionMiddleware() {
+  const PgSession = connectPg(session);
+
+  return session({
+    store: new PgSession({ pool, createTableIfMissing: true }),
+    secret: SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: process.env.NODE_ENV === "production",
+      httpOnly: true,
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    },
+  });
+}
+
+/** Middleware: require authenticated admin. Returns 401 if not logged in. */
+export function requireAdmin(req: Request, res: Response, next: NextFunction) {
+  if (req.isAuthenticated && req.isAuthenticated()) {
+    return next();
+  }
+  res.status(401).json({ message: "Unauthorized" });
+}

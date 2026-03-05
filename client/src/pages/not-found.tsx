@@ -1,21 +1,53 @@
-import { Card, CardContent } from "@/components/ui/card";
-import { AlertCircle } from "lucide-react";
+import { Link } from "wouter";
+import { useTranslation } from "react-i18next";
+import { Navigation } from "@/components/Navigation";
+import { Footer } from "@/components/Footer";
+import { motion } from "framer-motion";
+import { Home } from "lucide-react";
 
 export default function NotFound() {
-  return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-gray-50">
-      <Card className="w-full max-w-md mx-4">
-        <CardContent className="pt-6">
-          <div className="flex mb-4 gap-2">
-            <AlertCircle className="h-8 w-8 text-red-500" />
-            <h1 className="text-2xl font-bold text-gray-900">404 Page Not Found</h1>
-          </div>
+  const { t } = useTranslation();
 
-          <p className="mt-4 text-sm text-gray-600">
-            Did you forget to add the page to the router?
+  return (
+    <div className="bg-black min-h-screen text-white selection:bg-white selection:text-black flex flex-col">
+      <Navigation />
+
+      <main className="flex-1 flex items-center justify-center px-4 py-16">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="max-w-lg w-full text-center"
+        >
+          <span
+            className="text-7xl md:text-9xl font-medium tracking-tighter text-white/10"
+            style={{ fontFamily: "var(--font-display)" }}
+          >
+            {t("notFound.title")}
+          </span>
+          <h1
+            className="text-2xl md:text-3xl font-medium text-white mt-4"
+            style={{ fontFamily: "var(--font-display)" }}
+          >
+            {t("notFound.message")}
+          </h1>
+          <p className="mt-3 text-gray-400 text-sm md:text-base">
+            {t("notFound.joke")}
           </p>
-        </CardContent>
-      </Card>
+          <Link href="/">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="mt-8 inline-flex items-center gap-2 px-6 py-3 border border-white/30 text-white text-sm uppercase tracking-widest hover:bg-white hover:text-black transition-all"
+            >
+              <Home size={16} />
+              {t("notFound.backHome")}
+            </motion.button>
+          </Link>
+        </motion.div>
+      </main>
+
+      <Footer />
     </div>
   );
 }
