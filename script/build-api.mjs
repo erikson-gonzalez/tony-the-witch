@@ -1,18 +1,14 @@
 import { build } from "esbuild";
 
-// Bundle api/index.ts into a single file that Vercel can run
-// without needing to resolve ../server/ or ../shared/ imports.
-// Overwrites api/index.ts so @vercel/node picks it up as the entry.
+// Bundle api/index.ts into a single CJS file for Vercel.
+// CJS avoids @vercel/node's ESM re-transpilation which causes
+// duplicate identifier errors.
 await build({
-  entryPoints: ["api/index.ts"],
+  entryPoints: ["api/_handler.ts"],
   bundle: true,
   platform: "node",
-  format: "esm",
-  outfile: "api/index.ts",
-  allowOverwrite: true,
+  format: "cjs",
+  outfile: "api/index.js",
   external: ["pg-native"],
-  banner: {
-    js: "import { createRequire } from 'module'; const require = createRequire(import.meta.url);",
-  },
   logLevel: "info",
 });
