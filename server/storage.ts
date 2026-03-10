@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { inquiries, type InsertInquiry, type Inquiry } from "@shared/schema";
+import { inquiries, type InsertInquiry, type Inquiry } from "../shared/schema";
 
 export interface IStorage {
   createInquiry(inquiry: InsertInquiry): Promise<Inquiry>;

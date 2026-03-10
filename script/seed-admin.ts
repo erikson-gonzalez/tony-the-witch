@@ -15,8 +15,8 @@ import {
   navCards,
   galleryWorks,
   products,
-} from "@shared/schema";
-import { DEFAULT_SITE_CONFIG } from "@shared/defaults";
+} from "../shared/schema";
+import { DEFAULT_SITE_CONFIG } from "../shared/defaults";
 import { eq } from "drizzle-orm";
 
 const rl = readline.createInterface({ input: process.stdin, output: process.stdout });

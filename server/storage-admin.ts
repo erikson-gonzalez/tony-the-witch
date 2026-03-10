@@ -10,8 +10,8 @@ import {
   type InsertNavCard,
   type InsertGalleryWork,
   type InsertProduct,
-} from "@shared/schema";
-import { DEFAULT_SITE_CONFIG } from "@shared/defaults";
+} from "../shared/schema";
+import { DEFAULT_SITE_CONFIG } from "../shared/defaults";
 
 // =============================================================================
 // SITE CONFIG

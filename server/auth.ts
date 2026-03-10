@@ -46,6 +46,10 @@ export function setupPassport() {
 }
 
 export function getSessionMiddleware() {
+  if (process.env.NODE_ENV === "production" && !process.env.SESSION_SECRET) {
+    throw new Error("SESSION_SECRET must be set in production");
+  }
+
   const PgSession = connectPg(session);
 
   return session({
@@ -56,6 +60,7 @@ export function getSessionMiddleware() {
     cookie: {
       secure: process.env.NODE_ENV === "production",
       httpOnly: true,
+      sameSite: "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     },
   });

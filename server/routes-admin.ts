@@ -8,7 +8,7 @@ import {
   navCardsApi,
   galleryApi,
   productsApi,
-} from "@shared/admin-routes";
+} from "../shared/admin-routes";
 import {
   getSiteConfig,
   updateSiteConfig,
@@ -29,8 +29,8 @@ import {
 } from "./storage-admin";
 import { requireAdmin } from "./auth";
 import { asc } from "drizzle-orm";
-import { DEFAULT_SITE_CONFIG } from "@shared/defaults";
-import { siteConfig, navCards, galleryWorks, products } from "@shared/schema";
+import { DEFAULT_SITE_CONFIG } from "../shared/defaults";
+import { siteConfig, navCards, galleryWorks, products } from "../shared/schema";
 import { db } from "./db";
 
 // -----------------------------------------------------------------------------

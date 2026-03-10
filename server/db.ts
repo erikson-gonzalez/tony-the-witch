@@ -1,6 +1,6 @@
 import { drizzle } from "drizzle-orm/node-postgres";
 import pg from "pg";
-import * as schema from "@shared/schema";
+import * as schema from "../shared/schema";
 
 const { Pool } = pg;
 
@@ -10,5 +10,9 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+export const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  // Limit connections for serverless environments (each cold start creates a new pool)
+  max: process.env.VERCEL ? 1 : 10,
+});
 export const db = drizzle(pool, { schema });
