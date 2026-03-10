@@ -8,3 +8,4 @@ vite.config.ts.*
 *.tar.gz
 api/index.js
 api/index.mjs
+.vercel
