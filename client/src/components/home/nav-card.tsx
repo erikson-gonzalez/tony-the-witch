@@ -3,6 +3,7 @@ import { Link } from "wouter";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { getNavCardType } from "@/utils/nav-card-i18n";
+import { OptimizedImage } from "@/components/optimized-image";
 import type { NavCardItem } from "@/types/content";
 
 interface NavCardProps {
@@ -34,10 +35,11 @@ export const NavCardComponent = memo(function NavCardComponent({
 
   const content = (
     <>
-      <img
+      <OptimizedImage
         src={card.image}
         alt={displayTitle}
         className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 opacity-60 group-hover:opacity-80"
+        sizes="(max-width: 768px) 50vw, 25vw"
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
       <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6 z-10">

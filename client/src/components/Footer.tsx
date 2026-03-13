@@ -1,5 +1,6 @@
 import { useContent } from "@/hooks/use-content";
 import { useTranslation } from "react-i18next";
+import { OptimizedImage } from "@/components/optimized-image";
 
 const FALLBACK = {
   imageUrl:
@@ -19,10 +20,11 @@ export function Footer() {
   return (
     <footer className="relative">
       <div className="relative h-[28vh] md:h-[35vh] overflow-hidden">
-        <img
+        <OptimizedImage
           src={footer.imageUrl}
           alt={footer.brandText}
           className="absolute inset-0 w-full h-full object-cover opacity-50"
+          sizes="100vw"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-black from-30% via-black/80 via-60% to-black/30" />
         <div className="absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-black to-transparent" />

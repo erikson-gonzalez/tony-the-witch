@@ -1,6 +1,8 @@
 import type { Express, Response } from "express";
 import { z } from "zod";
 import passport from "passport";
+import multer from "multer";
+import { uploadMedia } from "./cloudinary";
 import {
   publicContentApi,
   authApi,
@@ -426,4 +428,42 @@ export function registerAdminRoutes(app: Express) {
       res.status(500).json({ message: "Internal server error" });
     }
   });
+
+  // Media upload
+  const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 100 * 1024 * 1024 },
+  });
+
+  protectedRouter.post(
+    "/api/admin/upload",
+    ...auth,
+    upload.single("file"),
+    async (req, res) => {
+      try {
+        if (!req.file) {
+          return res.status(400).json({ message: "No file provided" });
+        }
+
+        const mime = req.file.mimetype;
+        const isVideo = mime.startsWith("video/");
+        const isImage = mime.startsWith("image/");
+
+        if (!isVideo && !isImage) {
+          return res.status(400).json({ message: "Unsupported file type" });
+        }
+
+        const folder = (req.body.folder as string) || "general";
+        const result = await uploadMedia(req.file.buffer, {
+          folder,
+          resourceType: isVideo ? "video" : "image",
+        });
+
+        res.json(result);
+      } catch (err) {
+        console.error("POST /api/admin/upload:", err);
+        res.status(500).json({ message: "Upload failed" });
+      }
+    }
+  );
 }

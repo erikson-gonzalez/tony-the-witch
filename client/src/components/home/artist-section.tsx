@@ -2,6 +2,7 @@ import { useRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { useContent } from "@/hooks/use-content";
+import { OptimizedImage } from "@/components/optimized-image";
 
 const FALLBACK_ARTIST = {
   imageUrl:
@@ -33,12 +34,17 @@ export function ArtistSection() {
   return (
     <section ref={ref}>
       <div className="relative h-[36vh] md:h-[42vh] overflow-hidden">
-        <motion.img
-          src={artist.imageUrl}
-          alt="Tony The Witch at work"
-          className="absolute inset-0 w-full h-[120%] object-cover"
+        <motion.div
+          className="absolute inset-0 h-[120%]"
           style={{ y }}
-        />
+        >
+          <OptimizedImage
+            src={artist.imageUrl}
+            alt="Tony The Witch at work"
+            className="w-full h-full object-cover"
+            sizes="100vw"
+          />
+        </motion.div>
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/20" />
         <div className="absolute bottom-8 right-8 md:bottom-12 md:right-12">
           <div

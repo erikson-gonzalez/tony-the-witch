@@ -2,6 +2,7 @@ import { useRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { ChevronDown } from "lucide-react";
 import { useContent } from "@/hooks/use-content";
+import { OptimizedImage } from "@/components/optimized-image";
 
 const FALLBACK_HERO = {
   videoUrl: "/home-video.mp4",
@@ -56,10 +57,11 @@ export function ParallaxHero() {
           </h2>
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <div className="flex flex-col items-center">
-              <img
+              <OptimizedImage
                 src={hero.logoUrl}
                 alt={hero.title}
                 className="h-[min(768px,72vh)] w-auto block mb-8 drop-shadow-2xl object-contain"
+                priority
               />
               <motion.div
                 initial={{ opacity: 0 }}
@@ -77,10 +79,11 @@ export function ParallaxHero() {
           <h2 className="text-sm md:text-base tracking-[0.5em] uppercase text-gray-400 mb-2 font-medium text-center">
             {hero.title}
           </h2>
-          <img
+          <OptimizedImage
             src={hero.logoUrl}
             alt={hero.title}
             className="h-[min(1024px,72vh)] lg:h-[min(1280px,68vh)] w-auto block mb-8 drop-shadow-2xl object-contain"
+            priority
           />
           <motion.div
             initial={{ opacity: 0 }}

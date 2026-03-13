@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { Link, useParams } from "wouter";
 import { AdminLayout } from "../components/admin-layout";
 import { useAdminGallery } from "../hooks/use-admin-gallery";
+import { useUpload } from "../hooks/use-upload";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -24,6 +25,7 @@ export function AdminGalleryFormPage() {
   const params = useParams<{ id?: string }>();
   const id = params.id === "new" ? null : params.id ? parseInt(params.id, 10) : null;
   const { works, isLoading, create, createBatch, update, isMutating } = useAdminGallery();
+  const { upload, isUploading } = useUpload();
 
   const isNew = id === null || params.id === "new";
   const work = !isNew && id
@@ -86,11 +88,15 @@ export function AdminGalleryFormPage() {
         return;
       }
 
-      const imageUrls: string[] = images.map((item, i) =>
-        item.url.startsWith("blob:")
-          ? `https://placehold.co/800x800?text=Obra+${i + 1}`
-          : item.url
-      );
+      const imageUrls: string[] = [];
+      for (const item of images) {
+        if (item.file) {
+          const result = await upload(item.file, "gallery");
+          imageUrls.push(result.url);
+        } else {
+          imageUrls.push(item.url);
+        }
+      }
 
       const items = imageUrls.map((image) => ({
         image,
@@ -260,8 +266,8 @@ export function AdminGalleryFormPage() {
           )}
 
           <div className="flex flex-col-reverse sm:flex-row gap-2 sm:justify-end pt-4">
-            <Button type="submit" disabled={isMutating}>
-              {isMutating ? "Guardando..." : "Guardar"}
+            <Button type="submit" disabled={isMutating || isUploading}>
+              {isUploading ? "Subiendo imágenes..." : isMutating ? "Guardando..." : "Guardar"}
             </Button>
           </div>
         </form>

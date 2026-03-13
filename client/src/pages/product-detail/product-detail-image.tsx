@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { OptimizedImage } from "@/components/optimized-image";
 
 interface ProductDetailImageProps {
   displayImage: string;
@@ -24,11 +25,11 @@ export function ProductDetailImage({
       transition={{ duration: 0.6 }}
     >
       <div className="aspect-square overflow-hidden bg-neutral-900 mb-3">
-        <img
+        <OptimizedImage
           src={displayImage}
           alt={displayName}
           className="w-full h-full object-cover"
-          data-testid="img-product-main"
+          sizes="(max-width: 768px) 100vw, 50vw"
         />
       </div>
       {showThumbnails && images.length > 1 && (
@@ -42,7 +43,7 @@ export function ProductDetailImage({
               }`}
               data-testid={`button-thumbnail-${i}`}
             >
-              <img src={img} alt="" className="w-full h-full object-cover" />
+              <OptimizedImage src={img} alt="" className="w-full h-full object-cover" width={96} height={96} />
             </button>
           ))}
         </div>

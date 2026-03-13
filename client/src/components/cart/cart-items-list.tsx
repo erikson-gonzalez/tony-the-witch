@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Minus, Plus, Trash2, Share2 } from "lucide-react";
 import { Link } from "wouter";
 import { useTranslation } from "react-i18next";
+import { OptimizedImage } from "@/components/optimized-image";
 import { formatPrice } from "@/utils/formatPrice";
 import { isCustomSession } from "@/utils/shipping";
 import { getReservationShareUrl } from "@/constants/reservation-share";
@@ -54,13 +55,13 @@ const CartLineItem = memo(function CartLineItem({
       {item.isReservation || isCustomSession(item) ? (
         <div className="shrink-0">
           <div className="w-20 h-20 md:w-24 md:h-24 bg-neutral-900 overflow-hidden">
-            <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+            <OptimizedImage src={item.image} alt={item.name} className="w-full h-full object-cover" width={96} height={96} />
           </div>
         </div>
       ) : (
         <Link href={`/shop/${item.slug}`} className="shrink-0">
           <div className="w-20 h-20 md:w-24 md:h-24 bg-neutral-900 overflow-hidden">
-            <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+            <OptimizedImage src={item.image} alt={item.name} className="w-full h-full object-cover" width={96} height={96} />
           </div>
         </Link>
       )}

@@ -1,4 +1,5 @@
 import { useCallback, useState } from "react";
+import { useUpload } from "../hooks/use-upload";
 
 const ALLOWED_IMAGE_TYPES = [
   "image/jpeg",
@@ -33,9 +34,10 @@ export function MediaUploadField({
   type: "image" | "video";
 }) {
   const [error, setError] = useState<string | null>(null);
+  const { upload, isUploading } = useUpload();
 
   const handleFileSelect = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (!file) return;
 
@@ -50,17 +52,15 @@ export function MediaUploadField({
         return;
       }
 
-      const reader = new FileReader();
-      reader.onload = () => {
-        onChange(reader.result as string);
-      };
-      reader.onerror = () => {
-        setError("Error al leer el archivo.");
-      };
-      reader.readAsDataURL(file);
+      try {
+        const result = await upload(file, "config");
+        onChange(result.url);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Error al subir archivo.");
+      }
       e.target.value = "";
     },
-    [type, onChange]
+    [type, onChange, upload]
   );
 
   const clearMedia = useCallback(() => {
@@ -82,8 +82,15 @@ export function MediaUploadField({
         type="file"
         accept={accept}
         onChange={handleFileSelect}
-        className="block w-full text-sm text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-medium file:bg-slate-100 file:text-slate-800 hover:file:bg-slate-200"
+        disabled={isUploading}
+        className="block w-full text-sm text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-medium file:bg-slate-100 file:text-slate-800 hover:file:bg-slate-200 disabled:opacity-50"
       />
+      {isUploading && (
+        <div className="mt-3 flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
+          <div className="w-5 h-5 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin flex-shrink-0" />
+          <span className="text-sm text-slate-600">Subiendo archivo...</span>
+        </div>
+      )}
       {error && (
         <p className="mt-1 text-sm text-red-600">{error}</p>
       )}

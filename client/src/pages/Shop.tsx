@@ -8,6 +8,7 @@ import { useTranslation } from "react-i18next";
 import { formatPrice, getUsdToCrc } from "@/utils/formatPrice";
 import { getCategoryKey } from "@/utils/category-i18n";
 import { CUSTOM_SESSION_SLUG } from "@/constants/custom-session";
+import { OptimizedImage } from "@/components/optimized-image";
 import type { ProductItem } from "@/types/content";
 
 /** Virtual product for custom tattoo session - always first in Otros */
@@ -142,20 +143,20 @@ function ProductCard({
       <Link href={`/shop/${product.slug}`} data-testid={`link-product-${product.slug}`}>
         <div className="group cursor-pointer">
           <div className="relative aspect-square overflow-hidden bg-neutral-900 mb-3">
-            <img
+            <OptimizedImage
               src={product.images[0]}
               alt={product.name}
               className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${
                 product.slug === CUSTOM_SESSION_SLUG ? "" : "group-hover:opacity-0"
               }`}
-              loading="lazy"
+              sizes="(max-width: 768px) 50vw, 25vw"
             />
             {product.images[1] && (
-              <img
+              <OptimizedImage
                 src={product.images[1]}
                 alt={`${product.name} alternate`}
                 className="absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-500 group-hover:opacity-100"
-                loading="lazy"
+                sizes="(max-width: 768px) 50vw, 25vw"
               />
             )}
           </div>

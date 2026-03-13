@@ -2,6 +2,7 @@ import { memo } from "react";
 import { motion } from "framer-motion";
 import { Eye } from "lucide-react";
 import { GALLERY_HEIGHT_CLASS } from "@/utils/gallery";
+import { OptimizedImage } from "@/components/optimized-image";
 import type { GalleryWorkItem } from "@/types/content";
 
 interface GalleryItemProps {
@@ -26,11 +27,11 @@ export const GalleryItem = memo(function GalleryItem({
       onClick={() => onOpen(work.image)}
       data-testid={`gallery-item-${work.id}`}
     >
-      <img
+      <OptimizedImage
         src={work.image}
         alt="Tattoo artwork"
         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-        loading="lazy"
+        sizes="(max-width: 768px) 50vw, 33vw"
       />
       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 flex items-center justify-center">
         <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 transform scale-75 group-hover:scale-100">
