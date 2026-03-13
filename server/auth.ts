@@ -53,7 +53,13 @@ export function getSessionMiddleware() {
   const PgSession = connectPg(session);
 
   return session({
-    store: new PgSession({ pool, createTableIfMissing: true }),
+    store: new PgSession({
+      pool,
+      createTableIfMissing: false,
+      // Table SQL provided inline to avoid file read issues in serverless bundles.
+      // Run this SQL manually if the "session" table doesn't exist:
+      // CREATE TABLE IF NOT EXISTS "session" ("sid" VARCHAR NOT NULL PRIMARY KEY, "sess" JSON NOT NULL, "expire" TIMESTAMP(6) NOT NULL); CREATE INDEX IF NOT EXISTS "IDX_session_expire" ON "session" ("expire");
+    }),
     secret: SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
