@@ -53,11 +53,11 @@ function Router() {
         <Route path="/admin/products/:id" component={AdminProductFormWrapper} />
         <Route path="/admin/gallery/new" component={AdminGalleryFormWrapper} />
         <Route path="/admin/gallery/:id" component={AdminGalleryFormWrapper} />
-        <Route path="/admin" component={AdminWrapper} />
         <Route path="/admin/config" component={AdminWrapper} />
         <Route path="/admin/nav-cards" component={AdminWrapper} />
         <Route path="/admin/gallery" component={AdminWrapper} />
         <Route path="/admin/products" component={AdminWrapper} />
+        <Route path="/admin" component={AdminWrapper} />
         <Route path="/" component={Home} />
         <Route path="/portfolio" component={Portfolio} />
         <Route path="/shop" component={Shop} />
