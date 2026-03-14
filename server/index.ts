@@ -4,6 +4,7 @@ import passport from "passport";
 import { registerRoutes } from "./routes";
 import { setupPassport, getSessionMiddleware } from "./auth";
 import { serveStatic } from "./static";
+import { initEmail } from "./email";
 import { createServer } from "http";
 
 const app = express();
@@ -24,6 +25,9 @@ app.use(
 );
 
 app.use(express.urlencoded({ extended: false }));
+
+// Email service
+initEmail();
 
 // Session & Auth (required for /api/admin/*)
 setupPassport();

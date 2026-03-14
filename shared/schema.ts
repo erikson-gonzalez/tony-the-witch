@@ -26,11 +26,19 @@ export const inquiries = pgTable("inquiries", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const insertInquirySchema = createInsertSchema(inquiries).omit({
-  id: true,
-  createdAt: true,
-  isRead: true,
-});
+export const insertInquirySchema = createInsertSchema(inquiries)
+  .omit({
+    id: true,
+    createdAt: true,
+    isRead: true,
+  })
+  .extend({
+    email: z.string().email("Email inválido"),
+    name: z.string().min(1).max(200),
+    message: z.string().min(1).max(5000),
+    tattooIdea: z.string().max(2000).nullish(),
+    placement: z.string().max(500).nullish(),
+  });
 
 export type Inquiry = typeof inquiries.$inferSelect;
 export type InsertInquiry = z.infer<typeof insertInquirySchema>;
