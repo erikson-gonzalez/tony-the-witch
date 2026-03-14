@@ -18,13 +18,14 @@ import {
 } from "@/components/ui/tooltip";
 import { Upload, X, Plus, HelpCircle } from "lucide-react";
 import { useContent } from "@/hooks/use-content";
+import { useUpload } from "../hooks/use-upload";
 import { calculateNetAmount, calculateRequiredPrice, FEE_LABELS } from "@/utils/price-calculator";
 import { formatAmountWithCommas, parseFormattedAmount } from "@/utils/format-amount-input";
 import { AVAILABLE_SIZES } from "../constants/product-sizes";
 
 const MAX_IMAGES = 4;
 
-type ImageItem = { url: string; file?: File };
+type ImageItem = { url: string };
 
 /** sizeColorStock[size][colorName] = stock (undefined = vacío) */
 type SizeColorStock = Record<string, Record<string, number | undefined>>;
@@ -259,27 +260,30 @@ export function ProductFormContent({
     [colorRows]
   );
 
+  const { upload, isUploading } = useUpload();
+
   const handleFileSelect = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
       const files = Array.from(e.target.files ?? []);
       const remaining = MAX_IMAGES - images.length;
       if (remaining <= 0) return;
 
-      const newItems: ImageItem[] = files
-        .slice(0, remaining)
-        .map((file) => ({ url: URL.createObjectURL(file), file }));
-      setImages((prev) => [...prev, ...newItems]);
+      const filesToUpload = files.slice(0, remaining);
+      for (const file of filesToUpload) {
+        try {
+          const result = await upload(file, "products");
+          setImages((prev) => [...prev, { url: result.url }]);
+        } catch {
+          // skip failed uploads
+        }
+      }
       e.target.value = "";
     },
-    [images.length]
+    [images.length, upload]
   );
 
   const removeImage = useCallback((index: number) => {
-    setImages((prev) => {
-      const item = prev[index];
-      if (item.url.startsWith("blob:")) URL.revokeObjectURL(item.url);
-      return prev.filter((_, i) => i !== index);
-    });
+    setImages((prev) => prev.filter((_, i) => i !== index));
   }, []);
 
   const getStockTotal = useCallback(
@@ -296,11 +300,7 @@ export function ProductFormContent({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const imageUrls: string[] = images.map((item, i) =>
-      item.url.startsWith("blob:")
-        ? `https://placehold.co/400x400?text=Img+${i + 1}`
-        : item.url
-    );
+    const imageUrls: string[] = images.map((item) => item.url);
 
     let sizes: string[] | undefined;
     let sizeStock: Record<string, number> | undefined;
@@ -369,7 +369,7 @@ export function ProductFormContent({
       category,
       price: parseFormattedAmount(price, true) || 0,
       description,
-      images: imageUrls.length ? imageUrls : ["https://placehold.co/400x400?text=Product"],
+      images: imageUrls,
       sizes,
       sizeStock,
       sizeColorStock: sizeColorStockOut,
@@ -514,7 +514,12 @@ export function ProductFormContent({
               </button>
             </div>
           ))}
-          {images.length < MAX_IMAGES && (
+          {isUploading && (
+            <div className="w-20 h-20 rounded-lg border-2 border-dashed border-slate-300 flex items-center justify-center shrink-0">
+              <div className="w-5 h-5 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin" />
+            </div>
+          )}
+          {!isUploading && images.length < MAX_IMAGES && (
             <label className="w-20 h-20 rounded-lg border-2 border-dashed border-slate-300 flex items-center justify-center cursor-pointer hover:border-slate-400 hover:bg-slate-50 transition-colors shrink-0">
               <input
                 type="file"
@@ -753,8 +758,8 @@ export function ProductFormContent({
       )}
 
       <div className="flex flex-col-reverse sm:flex-row gap-2 sm:justify-end pt-4">
-        <Button type="submit" disabled={isLoading}>
-          {isLoading ? "Guardando..." : "Guardar"}
+        <Button type="submit" disabled={isLoading || isUploading || images.length === 0}>
+          {isUploading ? "Subiendo imágenes..." : isLoading ? "Guardando..." : "Guardar"}
         </Button>
       </div>
     </form>

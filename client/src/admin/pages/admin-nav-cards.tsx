@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { AdminLayout } from "../components/admin-layout";
 import { useAdminNavCards } from "../hooks/use-admin-nav-cards";
 import { Button } from "@/components/ui/button";
@@ -30,6 +30,7 @@ import { Pencil, Trash2, RotateCcw } from "lucide-react";
 import { DEFAULT_NAV_CARDS } from "@/constants/nav-cards-recovery";
 import { isStandardNavCard } from "@/utils/nav-card-i18n";
 import { NavCardComponent } from "@/components/home/nav-card";
+import { MediaUploadField } from "../components/media-upload-field";
 
 const CR_COUNTRY_CODE = "506";
 
@@ -259,9 +260,6 @@ function NavCardForm({
   const [href, setHref] = useState(initial?.href ?? ROUTE_OPTIONS[0]?.href ?? "");
   const [external, setExternal] = useState(initial?.external ?? false);
   const [image, setImage] = useState<string>(initial?.image ?? "");
-  const [imagePreview, setImagePreview] = useState<string | null>(
-    initial?.image?.startsWith("data:") || initial?.image?.startsWith("http") ? initial.image : null
-  );
 
   useEffect(() => {
     if (initial) {
@@ -270,30 +268,8 @@ function NavCardForm({
       setHref(initial.href);
       setExternal(initial.external);
       setImage(initial.image);
-      setImagePreview(initial.image);
     }
   }, [initial]);
-
-  const handleFileSelect = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (!file || !file.type.startsWith("image/")) return;
-      const reader = new FileReader();
-      reader.onload = () => {
-        const dataUrl = reader.result as string;
-        setImage(dataUrl);
-        setImagePreview(dataUrl);
-      };
-      reader.readAsDataURL(file);
-      e.target.value = "";
-    },
-    []
-  );
-
-  const clearImage = useCallback(() => {
-    setImage("");
-    setImagePreview(null);
-  }, []);
 
   const [phoneNumber, setPhoneNumber] = useState(
     initial && isWhatsAppContactCard(initial.href) ? parsePhoneFromWaUrl(initial.href) : ""
@@ -337,32 +313,13 @@ function NavCardForm({
             Solo podés modificar la imagen y el número de teléfono para Costa Rica (+506).
           </p>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <Label>Imagen</Label>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleFileSelect}
-                className="block w-full text-sm text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-medium file:bg-slate-100 file:text-slate-800 hover:file:bg-slate-200"
-              />
-              {imagePreview && (
-                <div className="mt-2 relative inline-block">
-                  <img
-                    src={imagePreview}
-                    alt="Vista previa"
-                    className="h-20 w-20 object-cover rounded border border-slate-200"
-                  />
-                  <button
-                    type="button"
-                    onClick={clearImage}
-                    className="absolute -top-1 -right-1 p-1 bg-slate-700 text-white rounded-full text-xs hover:bg-slate-800"
-                    aria-label="Quitar imagen"
-                  >
-                    ×
-                  </button>
-                </div>
-              )}
-            </div>
+            <MediaUploadField
+              label="Imagen"
+              type="image"
+              folder="nav-cards"
+              value={image}
+              onChange={setImage}
+            />
             <div>
               <Label>Número de teléfono (CR)</Label>
               <div className="flex items-center gap-2 mt-1">
@@ -407,32 +364,13 @@ function NavCardForm({
             Solo podés cambiar la imagen. El título y subtítulo se muestran según el idioma del sitio.
           </p>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <Label>Imagen</Label>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleFileSelect}
-                className="block w-full text-sm text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-medium file:bg-slate-100 file:text-slate-800 hover:file:bg-slate-200"
-              />
-              {imagePreview && (
-                <div className="mt-2 relative inline-block">
-                  <img
-                    src={imagePreview}
-                    alt="Vista previa"
-                    className="h-20 w-20 object-cover rounded border border-slate-200"
-                  />
-                  <button
-                    type="button"
-                    onClick={clearImage}
-                    className="absolute -top-1 -right-1 p-1 bg-slate-700 text-white rounded-full text-xs hover:bg-slate-800"
-                    aria-label="Quitar imagen"
-                  >
-                    ×
-                  </button>
-                </div>
-              )}
-            </div>
+            <MediaUploadField
+              label="Imagen"
+              type="image"
+              folder="nav-cards"
+              value={image}
+              onChange={setImage}
+            />
             <div className="flex justify-end gap-2 pt-4">
               <Button type="button" variant="outline" onClick={onClose}>
                 Cancelar
@@ -493,32 +431,13 @@ function NavCardForm({
               Contactá a soporte para cambiar la ruta
             </p>
           </div>
-          <div>
-            <Label>Imagen</Label>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleFileSelect}
-              className="block w-full text-sm text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-medium file:bg-slate-100 file:text-slate-800 hover:file:bg-slate-200"
-            />
-            {imagePreview && (
-              <div className="mt-2 relative inline-block">
-                <img
-                  src={imagePreview}
-                  alt="Vista previa"
-                  className="h-20 w-20 object-cover rounded border border-slate-200"
-                />
-                <button
-                  type="button"
-                  onClick={clearImage}
-                  className="absolute -top-1 -right-1 p-1 bg-slate-700 text-white rounded-full text-xs hover:bg-slate-800"
-                  aria-label="Quitar imagen"
-                >
-                  ×
-                </button>
-              </div>
-            )}
-          </div>
+          <MediaUploadField
+            label="Imagen"
+            type="image"
+            folder="nav-cards"
+            value={image}
+            onChange={setImage}
+          />
           <div className="flex items-center gap-2">
             <input
               type="checkbox"

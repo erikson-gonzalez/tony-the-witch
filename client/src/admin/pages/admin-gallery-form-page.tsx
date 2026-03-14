@@ -3,7 +3,6 @@ import { Link, useParams } from "wouter";
 import { AdminLayout } from "../components/admin-layout";
 import { useAdminGallery } from "../hooks/use-admin-gallery";
 import { useUpload } from "../hooks/use-upload";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,11 +14,12 @@ import {
 } from "@/components/ui/select";
 import { ArrowLeft, X } from "lucide-react";
 import { GALLERY_CATEGORIES } from "@/constants/gallery-data";
+import { MediaUploadField } from "../components/media-upload-field";
 
 const MAX_IMAGES_PER_BATCH = 6;
 const MAX_IMAGES_PER_CATEGORY = 18;
 
-type ImageItem = { url: string; file?: File };
+type ImageItem = { url: string };
 
 export function AdminGalleryFormPage() {
   const params = useParams<{ id?: string }>();
@@ -51,28 +51,29 @@ export function AdminGalleryFormPage() {
   const categoriesForSelect = GALLERY_CATEGORIES.filter((c) => c !== "All");
 
   const handleFileSelect = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
       const files = Array.from(e.target.files ?? []).filter(
         (f) => f.type.startsWith("image/")
       );
       const remaining = MAX_IMAGES_PER_BATCH - images.length;
       if (remaining <= 0) return;
 
-      const newItems: ImageItem[] = files
-        .slice(0, remaining)
-        .map((file) => ({ url: URL.createObjectURL(file), file }));
-      setImages((prev) => [...prev, ...newItems]);
+      const filesToUpload = files.slice(0, remaining);
+      for (const file of filesToUpload) {
+        try {
+          const result = await upload(file, "gallery");
+          setImages((prev) => [...prev, { url: result.url }]);
+        } catch {
+          // skip failed uploads
+        }
+      }
       e.target.value = "";
     },
-    [images.length]
+    [images.length, upload]
   );
 
   const removeImage = useCallback((index: number) => {
-    setImages((prev) => {
-      const item = prev[index];
-      if (item.url.startsWith("blob:")) URL.revokeObjectURL(item.url);
-      return prev.filter((_, i) => i !== index);
-    });
+    setImages((prev) => prev.filter((_, i) => i !== index));
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -88,17 +89,7 @@ export function AdminGalleryFormPage() {
         return;
       }
 
-      const imageUrls: string[] = [];
-      for (const item of images) {
-        if (item.file) {
-          const result = await upload(item.file, "gallery");
-          imageUrls.push(result.url);
-        } else {
-          imageUrls.push(item.url);
-        }
-      }
-
-      const items = imageUrls.map((image) => ({
+      const items = images.map(({ url: image }) => ({
         image,
         category: category.trim(),
       }));
@@ -178,8 +169,9 @@ export function AdminGalleryFormPage() {
                   type="file"
                   accept="image/*"
                   multiple
+                  disabled={isUploading}
                   onChange={handleFileSelect}
-                  className="block w-full text-sm text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-medium file:bg-slate-100 file:text-slate-800 hover:file:bg-slate-200"
+                  className="block w-full text-sm text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-medium file:bg-slate-100 file:text-slate-800 hover:file:bg-slate-200 disabled:opacity-50"
                 />
                 {images.length > 0 && (
                   <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
@@ -233,18 +225,13 @@ export function AdminGalleryFormPage() {
             </>
           ) : (
             <>
-              <div>
-                <Label htmlFor="image" className="text-slate-700">
-                  URL imagen
-                </Label>
-                <Input
-                  id="image"
-                  value={singleImageUrl}
-                  onChange={(e) => setSingleImageUrl(e.target.value)}
-                  required
-                  className="mt-1 bg-white border-slate-300 text-slate-900 placeholder:text-slate-500"
-                />
-              </div>
+              <MediaUploadField
+                label="Imagen"
+                type="image"
+                folder="gallery"
+                value={singleImageUrl}
+                onChange={setSingleImageUrl}
+              />
               <div>
                 <Label htmlFor="category" className="text-slate-700">
                   Categoría

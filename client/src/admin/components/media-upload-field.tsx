@@ -27,11 +27,13 @@ export function MediaUploadField({
   value = "",
   onChange,
   type,
+  folder = "config",
 }: {
   label: string;
   value?: string;
   onChange: (v: string) => void;
   type: "image" | "video";
+  folder?: string;
 }) {
   const [error, setError] = useState<string | null>(null);
   const { upload, isUploading } = useUpload();
@@ -53,14 +55,14 @@ export function MediaUploadField({
       }
 
       try {
-        const result = await upload(file, "config");
+        const result = await upload(file, folder);
         onChange(result.url);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Error al subir archivo.");
       }
       e.target.value = "";
     },
-    [type, onChange, upload]
+    [type, onChange, upload, folder]
   );
 
   const clearMedia = useCallback(() => {
