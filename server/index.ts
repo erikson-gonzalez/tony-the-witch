@@ -8,6 +8,7 @@ import { initEmail } from "./email";
 import { createServer } from "http";
 
 const app = express();
+app.set("trust proxy", 1);
 const httpServer = createServer(app);
 
 declare module "http" {
