@@ -10,6 +10,7 @@ import {
   navCardsApi,
   galleryApi,
   productsApi,
+  ordersApi,
 } from "../shared/admin-routes";
 import {
   getSiteConfig,
@@ -28,6 +29,11 @@ import {
   createProduct,
   updateProduct,
   deleteProduct,
+  listOrders,
+  getOrderById,
+  approveOrder,
+  rejectOrder,
+  getPendingOrderCount,
 } from "./storage-admin";
 import { requireAdmin } from "./auth";
 import { asc } from "drizzle-orm";
@@ -425,6 +431,88 @@ export function registerAdminRoutes(app: Express) {
       res.status(204).send();
     } catch (err) {
       console.error("DELETE /api/admin/products/:id:", err);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Orders
+  protectedRouter.get(ordersApi.pendingCount.path, ...auth, async (_req, res) => {
+    try {
+      const count = await getPendingOrderCount();
+      res.json({ count });
+    } catch (err) {
+      console.error("GET /api/admin/orders/pending-count:", err);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  protectedRouter.get(ordersApi.list.path, ...auth, async (req, res) => {
+    try {
+      const status = req.query.status as string | undefined;
+      const page = parseInt((req.query.page as string) || "1", 10);
+      const limit = parseInt((req.query.limit as string) || "20", 10);
+
+      const result = await listOrders({ status, page, limit });
+      const totalPages = Math.ceil(result.total / limit);
+
+      res.json({
+        orders: result.orders,
+        total: result.total,
+        page,
+        totalPages,
+      });
+    } catch (err) {
+      console.error("GET /api/admin/orders:", err);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  protectedRouter.get("/api/admin/orders/:id", ...auth, async (req, res) => {
+    try {
+      const idParam = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+      const id = parseInt(idParam ?? "", 10);
+      if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
+      const order = await getOrderById(id);
+      if (!order) return res.status(404).json({ message: "Not found" });
+      res.json(order);
+    } catch (err) {
+      console.error("GET /api/admin/orders/:id:", err);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  protectedRouter.put("/api/admin/orders/:id/approve", ...auth, async (req, res) => {
+    try {
+      const idParam = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+      const id = parseInt(idParam ?? "", 10);
+      if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
+
+      const input = ordersApi.approve.input.parse(req.body);
+      const order = await approveOrder(id, input.adminNote);
+      if (!order) return res.status(404).json({ message: "Not found" });
+
+      res.json(order);
+    } catch (err) {
+      if (handleZodError(err, res)) return;
+      console.error("PUT /api/admin/orders/:id/approve:", err);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  protectedRouter.put("/api/admin/orders/:id/reject", ...auth, async (req, res) => {
+    try {
+      const idParam = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+      const id = parseInt(idParam ?? "", 10);
+      if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
+
+      const input = ordersApi.reject.input.parse(req.body);
+      const order = await rejectOrder(id, input.adminNote);
+      if (!order) return res.status(404).json({ message: "Not found" });
+
+      res.json(order);
+    } catch (err) {
+      if (handleZodError(err, res)) return;
+      console.error("PUT /api/admin/orders/:id/reject:", err);
       res.status(500).json({ message: "Internal server error" });
     }
   });

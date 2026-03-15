@@ -1,4 +1,4 @@
-import { eq, asc, max } from "drizzle-orm";
+import { eq, asc, desc, max, sql, inArray } from "drizzle-orm";
 import { db } from "./db";
 import {
   siteConfig,
@@ -6,10 +6,13 @@ import {
   galleryWorks,
   products,
   adminUsers,
+  orders,
   type SiteConfigData,
   type InsertNavCard,
   type InsertGalleryWork,
   type InsertProduct,
+  type InsertOrder,
+  type Order,
 } from "../shared/schema";
 import { DEFAULT_SITE_CONFIG } from "../shared/defaults";
 
@@ -259,4 +262,167 @@ export async function createAdminUser(username: string, passwordHash: string) {
     .values({ username, passwordHash })
     .returning();
   return user!;
+}
+
+// =============================================================================
+// ORDERS
+// =============================================================================
+
+export async function getNextOrderNumber(): Promise<string> {
+  const [row] = await db
+    .select({ maxNum: max(orders.orderNumber) })
+    .from(orders);
+  if (!row?.maxNum) return "TTW-0001";
+  const num = parseInt(row.maxNum.replace("TTW-", ""), 10);
+  return `TTW-${String(num + 1).padStart(4, "0")}`;
+}
+
+export async function createOrder(
+  input: InsertOrder & {
+    subtotalUsd: number;
+    shippingCrc: number;
+    totalUsd: number;
+    totalCrc: number;
+    usdToCrcRate: number;
+  },
+): Promise<Order> {
+  const orderNumber = await getNextOrderNumber();
+  const [order] = await db
+    .insert(orders)
+    .values({
+      orderNumber,
+      customerName: input.customerName,
+      customerEmail: input.customerEmail,
+      customerPhone: input.customerPhone ?? null,
+      customerNote: input.customerNote ?? null,
+      items: input.items,
+      subtotalUsd: input.subtotalUsd,
+      shippingCrc: input.shippingCrc,
+      totalUsd: input.totalUsd,
+      totalCrc: input.totalCrc,
+      usdToCrcRate: input.usdToCrcRate,
+      shippingAddress: input.shippingAddress ?? null,
+      shippingZone: input.shippingZone ?? null,
+      shippingMethod: input.shippingMethod ?? null,
+      paymentMethod: input.paymentMethod,
+      paymentStatus: input.paymentMethod === "card" ? "approved" : "pending",
+    })
+    .returning();
+  return order!;
+}
+
+export async function getOrderById(id: number): Promise<Order | null> {
+  const [order] = await db.select().from(orders).where(eq(orders.id, id));
+  return order ?? null;
+}
+
+export async function getOrderByNumber(
+  orderNumber: string,
+): Promise<Order | null> {
+  const [order] = await db
+    .select()
+    .from(orders)
+    .where(eq(orders.orderNumber, orderNumber));
+  return order ?? null;
+}
+
+export async function listOrders(filters?: {
+  status?: string;
+  page?: number;
+  limit?: number;
+}): Promise<{ orders: Order[]; total: number }> {
+  const page = filters?.page ?? 1;
+  const limit = filters?.limit ?? 20;
+  const offset = (page - 1) * limit;
+
+  let query = db.select().from(orders);
+  let countQuery = db.select({ count: sql<number>`count(*)` }).from(orders);
+
+  if (filters?.status) {
+    if (filters.status === "pending") {
+      query = query.where(
+        inArray(orders.paymentStatus, ["pending", "proof_submitted"]),
+      ) as typeof query;
+      countQuery = countQuery.where(
+        inArray(orders.paymentStatus, ["pending", "proof_submitted"]),
+      ) as typeof countQuery;
+    } else {
+      query = query.where(
+        eq(orders.paymentStatus, filters.status),
+      ) as typeof query;
+      countQuery = countQuery.where(
+        eq(orders.paymentStatus, filters.status),
+      ) as typeof countQuery;
+    }
+  }
+
+  const [countRow] = await countQuery;
+  const total = Number(countRow?.count ?? 0);
+  const items = await query
+    .orderBy(desc(orders.createdAt))
+    .limit(limit)
+    .offset(offset);
+
+  return { orders: items, total };
+}
+
+export async function updateOrderProof(
+  id: number,
+  proofImageUrl: string,
+  sinpeTransactionRef?: string,
+): Promise<Order | null> {
+  const [order] = await db
+    .update(orders)
+    .set({
+      proofImageUrl,
+      sinpeTransactionRef: sinpeTransactionRef ?? null,
+      paymentStatus: "proof_submitted",
+      reviewedAt: null,
+      updatedAt: new Date(),
+    })
+    .where(eq(orders.id, id))
+    .returning();
+  return order ?? null;
+}
+
+export async function approveOrder(
+  id: number,
+  adminNote?: string,
+): Promise<Order | null> {
+  const [order] = await db
+    .update(orders)
+    .set({
+      paymentStatus: "approved",
+      adminNote: adminNote ?? null,
+      reviewedAt: new Date(),
+      updatedAt: new Date(),
+    })
+    .where(eq(orders.id, id))
+    .returning();
+  return order ?? null;
+}
+
+export async function rejectOrder(
+  id: number,
+  adminNote: string,
+): Promise<Order | null> {
+  const [order] = await db
+    .update(orders)
+    .set({
+      paymentStatus: "rejected",
+      adminNote,
+      reviewedAt: new Date(),
+      updatedAt: new Date(),
+    })
+    .where(eq(orders.id, id))
+    .returning();
+  return order ?? null;
+}
+
+export async function getPendingOrderCount(): Promise<number> {
+  const [row] = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(orders)
+    .where(inArray(orders.paymentStatus, ["pending", "proof_submitted"]));
+  return Number(row?.count ?? 0);
 }
