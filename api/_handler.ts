@@ -4,8 +4,10 @@ import passport from "passport";
 import { createServer } from "http";
 import { setupPassport, getSessionMiddleware } from "../server/auth";
 import { registerRoutes } from "../server/routes";
+import { initEmail } from "../server/email";
 
 const app = express();
+app.set("trust proxy", 1);
 
 // Body parsing
 app.use(
@@ -16,6 +18,9 @@ app.use(
   }),
 );
 app.use(express.urlencoded({ extended: false }));
+
+// Email service
+initEmail();
 
 // Session & Auth
 setupPassport();
