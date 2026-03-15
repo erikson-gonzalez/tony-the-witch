@@ -110,9 +110,18 @@ export const siteConfigDataSchema = z.object({
     title: z.string(),
     categories: z.array(z.string()),
   }),
-  pricing: z.object({
-    usdToCrc: z.number().min(1),
-  }).optional(),
+  pricing: z
+    .object({
+      usdToCrc: z.number().min(1),
+    })
+    .optional(),
+  sinpe: z
+    .object({
+      phoneNumber: z.string(),
+      accountHolder: z.string(),
+      bankName: z.string().optional(),
+    })
+    .optional(),
 });
 
 export type SiteConfigData = z.infer<typeof siteConfigDataSchema>;
@@ -205,3 +214,102 @@ export const insertAdminUserSchema = createInsertSchema(adminUsers).omit({
 });
 
 export type AdminUser = typeof adminUsers.$inferSelect;
+
+// =============================================================================
+// ORDERS (SINPE + Card payments)
+// =============================================================================
+
+export interface OrderItem {
+  productId: number;
+  slug: string;
+  name: string;
+  priceUsd: number; // cents
+  quantity: number;
+  size?: string;
+  color?: string;
+  image?: string;
+  isReservation?: boolean;
+}
+
+export interface ShippingAddress {
+  provincia: string;
+  canton: string;
+  distrito: string;
+  puntoReferencia?: string;
+  pais?: string;
+}
+
+export const orders = pgTable("orders", {
+  id: serial("id").primaryKey(),
+  orderNumber: text("order_number").notNull().unique(),
+
+  // Customer
+  customerName: text("customer_name").notNull(),
+  customerEmail: text("customer_email").notNull(),
+  customerPhone: text("customer_phone"),
+  customerNote: text("customer_note"),
+
+  // Items & totals
+  items: jsonb("items").notNull().$type<OrderItem[]>(),
+  subtotalUsd: integer("subtotal_usd").notNull(),
+  shippingCrc: integer("shipping_crc").notNull().default(0),
+  totalUsd: integer("total_usd").notNull(),
+  totalCrc: integer("total_crc").notNull(),
+  usdToCrcRate: integer("usd_to_crc_rate").notNull(),
+
+  // Shipping
+  shippingAddress: jsonb("shipping_address").$type<ShippingAddress | null>(),
+  shippingZone: text("shipping_zone"),
+  shippingMethod: text("shipping_method"),
+
+  // Payment
+  paymentMethod: text("payment_method").notNull(),
+  paymentStatus: text("payment_status").notNull().default("pending"),
+  proofImageUrl: text("proof_image_url"),
+  sinpeTransactionRef: text("sinpe_transaction_ref"),
+
+  // Admin
+  adminNote: text("admin_note"),
+  reviewedAt: timestamp("reviewed_at"),
+
+  // Timestamps
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertOrderSchema = z.object({
+  customerName: z.string().min(1).max(200),
+  customerEmail: z.string().email(),
+  customerPhone: z.string().max(50).optional(),
+  customerNote: z.string().max(2000).optional(),
+  items: z
+    .array(
+      z.object({
+        productId: z.number(),
+        slug: z.string(),
+        name: z.string(),
+        priceUsd: z.number(),
+        quantity: z.number().int().min(1),
+        size: z.string().optional(),
+        color: z.string().optional(),
+        image: z.string().optional(),
+        isReservation: z.boolean().optional(),
+      }),
+    )
+    .min(1),
+  shippingAddress: z
+    .object({
+      provincia: z.string(),
+      canton: z.string(),
+      distrito: z.string(),
+      puntoReferencia: z.string().optional(),
+      pais: z.string().optional(),
+    })
+    .optional(),
+  shippingZone: z.enum(["GAM", "NON_GAM", "INTERNATIONAL"]).optional(),
+  shippingMethod: z.enum(["STANDARD", "NEXT_DAY", "A_CONVENIR"]).optional(),
+  paymentMethod: z.enum(["sinpe", "card"]),
+});
+
+export type Order = typeof orders.$inferSelect;
+export type InsertOrder = z.infer<typeof insertOrderSchema>;

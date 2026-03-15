@@ -64,4 +64,9 @@ export const DEFAULT_SITE_CONFIG: SiteConfigData = {
   pricing: {
     usdToCrc: 500,
   },
+  sinpe: {
+    phoneNumber: "",
+    accountHolder: "",
+    bankName: "",
+  },
 };

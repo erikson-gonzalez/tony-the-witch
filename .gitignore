@@ -9,3 +9,5 @@ vite.config.ts.*
 api/index.js
 api/index.mjs
 .vercel
+.claude/commands
+tasks/

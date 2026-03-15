@@ -383,3 +383,110 @@ export const productsApi = {
     },
   },
 };
+
+// =============================================================================
+// ORDERS (admin)
+// =============================================================================
+
+const orderSchema = z.object({
+  id: z.number(),
+  orderNumber: z.string(),
+  customerName: z.string(),
+  customerEmail: z.string(),
+  customerPhone: z.string().nullable(),
+  customerNote: z.string().nullable(),
+  items: z.array(
+    z.object({
+      productId: z.number(),
+      slug: z.string(),
+      name: z.string(),
+      priceUsd: z.number(),
+      quantity: z.number(),
+      size: z.string().optional(),
+      color: z.string().optional(),
+      image: z.string().optional(),
+      isReservation: z.boolean().optional(),
+    }),
+  ),
+  subtotalUsd: z.number(),
+  shippingCrc: z.number(),
+  totalUsd: z.number(),
+  totalCrc: z.number(),
+  usdToCrcRate: z.number(),
+  shippingAddress: z
+    .object({
+      provincia: z.string(),
+      canton: z.string(),
+      distrito: z.string(),
+      puntoReferencia: z.string().optional(),
+      pais: z.string().optional(),
+    })
+    .nullable(),
+  shippingZone: z.string().nullable(),
+  shippingMethod: z.string().nullable(),
+  paymentMethod: z.string(),
+  paymentStatus: z.string(),
+  proofImageUrl: z.string().nullable(),
+  sinpeTransactionRef: z.string().nullable(),
+  adminNote: z.string().nullable(),
+  reviewedAt: z.string().nullable(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+
+export const ordersApi = {
+  list: {
+    method: "GET" as const,
+    path: "/api/admin/orders" as const,
+    responses: {
+      200: z.object({
+        orders: z.array(orderSchema),
+        total: z.number(),
+        page: z.number(),
+        totalPages: z.number(),
+      }),
+      500: errorSchemas.internal,
+    },
+  },
+  get: {
+    method: "GET" as const,
+    path: "/api/admin/orders/:id" as const,
+    responses: {
+      200: orderSchema,
+      404: errorSchemas.internal,
+      500: errorSchemas.internal,
+    },
+  },
+  approve: {
+    method: "PUT" as const,
+    path: "/api/admin/orders/:id/approve" as const,
+    input: z.object({
+      adminNote: z.string().max(2000).optional(),
+    }),
+    responses: {
+      200: orderSchema,
+      404: errorSchemas.internal,
+      500: errorSchemas.internal,
+    },
+  },
+  reject: {
+    method: "PUT" as const,
+    path: "/api/admin/orders/:id/reject" as const,
+    input: z.object({
+      adminNote: z.string().min(1).max(2000),
+    }),
+    responses: {
+      200: orderSchema,
+      404: errorSchemas.internal,
+      500: errorSchemas.internal,
+    },
+  },
+  pendingCount: {
+    method: "GET" as const,
+    path: "/api/admin/orders/pending-count" as const,
+    responses: {
+      200: z.object({ count: z.number() }),
+      500: errorSchemas.internal,
+    },
+  },
+};
