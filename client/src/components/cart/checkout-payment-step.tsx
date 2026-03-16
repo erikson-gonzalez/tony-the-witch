@@ -18,7 +18,7 @@ interface CheckoutPaymentStepProps {
   hasCustomSession?: boolean;
   reservationPrice?: number;
   onUpdateCard: (updates: Partial<CardForm>) => void;
-  onValidate: () => void;
+  onValidate: () => void | Promise<boolean>;
   onBack: () => void;
 }
 

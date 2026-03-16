@@ -29,6 +29,7 @@ export interface SiteConfig {
     viewMoreText: string;
   };
   shop: { title: string; categories: string[] };
+  sinpe?: { phoneNumber: string; accountHolder: string; bankName?: string };
 }
 
 export interface NavCardItem {

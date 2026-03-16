@@ -1,4 +1,4 @@
-export type CheckoutStep = "cart" | "info" | "payment" | "processing" | "confirmed";
+export type CheckoutStep = "cart" | "info" | "payment_method" | "payment" | "sinpe_instructions" | "sinpe_proof" | "processing" | "confirmed";
 
 export type ShippingZone = "GAM" | "NON_GAM" | "INTERNATIONAL";
 export type ShippingMethod = "STANDARD" | "NEXT_DAY" | "A_CONVENIR";
@@ -22,6 +22,8 @@ export interface CheckoutForm {
   nextDayAccepted?: boolean;
   /** Discount/promo code */
   discountCode?: string;
+  /** Payment method */
+  paymentMethod?: "sinpe" | "card";
 }
 
 export interface CardForm {

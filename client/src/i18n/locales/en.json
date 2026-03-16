@@ -111,7 +111,11 @@
     "sinpeConfirmedTitle": "Order received!",
     "sinpeConfirmedMessage": "Tony will review your proof and we'll confirm by email",
     "sinpeViewStatus": "View order status",
-    "backToShop": "Back to shop"
+    "backToShop": "Back to shop",
+    "errorCreateOrder": "Error creating order. Please try again.",
+    "errorConnection": "Connection error. Please try again.",
+    "errorUpload": "Error uploading image. Please try again.",
+    "errorSubmitProof": "Error submitting proof. Please try again."
   },
   "product": {
     "addToCart": "Add to Cart",

@@ -6,11 +6,13 @@ import { useTranslation } from "react-i18next";
 interface CheckoutConfirmedStepProps {
   customerName: string;
   customerEmail: string;
+  orderNumber?: string | null;
 }
 
 export function CheckoutConfirmedStep({
   customerName,
   customerEmail,
+  orderNumber,
 }: CheckoutConfirmedStepProps) {
   const { t } = useTranslation();
 
@@ -36,20 +38,30 @@ export function CheckoutConfirmedStep({
       >
         {t("checkout.confirmed")}
       </h2>
-      <p className="text-gray-500 mb-2" data-testid="text-order-message">
+      {orderNumber && (
+        <p className="text-xl font-mono text-white mb-2">{orderNumber}</p>
+      )}
+      <p className="text-gray-500 mb-8" data-testid="text-order-message">
         {t("checkout.confirmedMessage", { name: customerName })}{" "}
         <span className="text-gray-300">{customerEmail}</span>.
       </p>
-      <p className="text-xs text-gray-600 mb-8">
-        {t("checkout.confirmedSimulated")}
-      </p>
-      <Link
-        href="/shop"
-        className="text-sm uppercase tracking-widest border-b border-white/30 pb-1 hover:border-white transition-colors text-gray-400 hover:text-white"
-        data-testid="link-back-to-shop"
-      >
-        {t("common.continueShopping")}
-      </Link>
+      <div className="flex flex-col gap-4 items-center">
+        {orderNumber && (
+          <Link
+            href={`/order/${orderNumber}`}
+            className="text-sm uppercase tracking-widest border-b border-white/30 pb-1 hover:border-white transition-colors text-gray-400 hover:text-white"
+          >
+            {t("checkout.sinpeViewStatus")}
+          </Link>
+        )}
+        <Link
+          href="/shop"
+          className="text-sm uppercase tracking-widest border-b border-white/30 pb-1 hover:border-white transition-colors text-gray-400 hover:text-white"
+          data-testid="link-back-to-shop"
+        >
+          {t("common.continueShopping")}
+        </Link>
+      </div>
     </motion.div>
   );
 }

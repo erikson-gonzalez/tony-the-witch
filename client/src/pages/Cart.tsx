@@ -11,6 +11,10 @@ import {
   CheckoutProcessingStep,
   CheckoutConfirmedStep,
   CheckoutStepsIndicator,
+  PaymentMethodSelect,
+  SinpeInstructionsStep,
+  SinpeProofUploadStep,
+  SinpeConfirmedStep,
 } from "@/components/cart";
 import { useCheckout } from "@/hooks/use-checkout";
 import { useEffect } from "react";
@@ -40,12 +44,17 @@ export default function Cart() {
     form,
     card,
     formErrors,
+    orderNumber,
+    orderTotalCrc,
+    isSubmitting,
     goToStep,
     updateForm,
     updateCard,
     validateInfo,
     validatePayment,
-  } = useCheckout(clearCart, needsShipping(items));
+    selectPaymentMethod,
+    submitProof,
+  } = useCheckout(clearCart, needsShipping(items), items, totalPrice);
 
   // Buy Now: skip cart view and go directly to checkout
   useEffect(() => {
@@ -64,15 +73,21 @@ export default function Cart() {
   }, [location, items, addReservation, setLocation]);
 
   const showStepsIndicator =
-    step !== "cart" && step !== "processing" && step !== "confirmed";
-  const showTitle = step !== "processing" && step !== "confirmed";
+    step === "info" || step === "payment_method" || step === "payment" ||
+    step === "sinpe_instructions" || step === "sinpe_proof";
+  const showTitle =
+    step !== "processing" && step !== "confirmed" &&
+    step !== "sinpe_instructions" && step !== "sinpe_proof";
 
   const getTitle = () => {
     if (step === "cart") return `${t("cart.title")} (${totalItems})`;
     if (step === "info") return t("cart.checkout");
+    if (step === "payment_method") return t("cart.payment");
     if (step === "payment") return t("cart.payment");
     return "";
   };
+
+  const sinpeConfig = config?.sinpe;
 
   return (
     <div className="bg-black min-h-screen text-white selection:bg-white selection:text-black flex flex-col">
@@ -181,6 +196,15 @@ export default function Cart() {
               />
             )}
 
+            {step === "payment_method" && (
+              <PaymentMethodSelect
+                isSubmitting={isSubmitting}
+                error={formErrors._api}
+                onSelect={selectPaymentMethod}
+                onBack={() => goToStep("info")}
+              />
+            )}
+
             {step === "payment" && (
               <CheckoutPaymentStep
                 card={card}
@@ -212,16 +236,40 @@ export default function Cart() {
                 hasCustomSession={items.some((i) => isCustomSession(i))}
                 onUpdateCard={updateCard}
                 onValidate={validatePayment}
-                onBack={() => goToStep("info")}
+                onBack={() => goToStep("payment_method")}
+              />
+            )}
+
+            {step === "sinpe_instructions" && orderNumber && (
+              <SinpeInstructionsStep
+                orderNumber={orderNumber}
+                totalCrc={orderTotalCrc}
+                sinpePhone={sinpeConfig?.phoneNumber ?? ""}
+                sinpeAccountHolder={sinpeConfig?.accountHolder ?? ""}
+                sinpeBankName={sinpeConfig?.bankName}
+                onContinue={() => goToStep("sinpe_proof")}
+              />
+            )}
+
+            {step === "sinpe_proof" && (
+              <SinpeProofUploadStep
+                isSubmitting={isSubmitting}
+                onSubmitProof={submitProof}
+                onBack={() => goToStep("sinpe_instructions")}
               />
             )}
 
             {step === "processing" && <CheckoutProcessingStep />}
 
-            {step === "confirmed" && (
+            {step === "confirmed" && form.paymentMethod === "sinpe" && orderNumber && (
+              <SinpeConfirmedStep orderNumber={orderNumber} />
+            )}
+
+            {step === "confirmed" && form.paymentMethod !== "sinpe" && (
               <CheckoutConfirmedStep
                 customerName={form.name}
                 customerEmail={form.email}
+                orderNumber={orderNumber}
               />
             )}
           </AnimatePresence>

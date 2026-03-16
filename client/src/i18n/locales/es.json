@@ -111,7 +111,11 @@
     "sinpeConfirmedTitle": "¡Pedido recibido!",
     "sinpeConfirmedMessage": "Tony revisará tu comprobante y te confirmaremos por email",
     "sinpeViewStatus": "Ver estado del pedido",
-    "backToShop": "Volver a la tienda"
+    "backToShop": "Volver a la tienda",
+    "errorCreateOrder": "Error al crear pedido. Intentá de nuevo.",
+    "errorConnection": "Error de conexión. Intentá de nuevo.",
+    "errorUpload": "Error al subir la imagen. Intentá de nuevo.",
+    "errorSubmitProof": "Error al enviar comprobante. Intentá de nuevo."
   },
   "product": {
     "addToCart": "Agregar al carrito",

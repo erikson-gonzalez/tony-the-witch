@@ -5,3 +5,7 @@ export { CheckoutPaymentStep } from "./checkout-payment-step";
 export { CheckoutProcessingStep } from "./checkout-processing-step";
 export { CheckoutConfirmedStep } from "./checkout-confirmed-step";
 export { CheckoutStepsIndicator } from "./checkout-steps-indicator";
+export { PaymentMethodSelect } from "./payment-method-select";
+export { SinpeInstructionsStep } from "./sinpe-instructions-step";
+export { SinpeProofUploadStep } from "./sinpe-proof-upload-step";
+export { SinpeConfirmedStep } from "./sinpe-confirmed-step";
