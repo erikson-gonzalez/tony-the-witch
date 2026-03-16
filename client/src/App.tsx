@@ -23,6 +23,7 @@ import Portfolio from "@/pages/Portfolio";
 import Shop from "@/pages/Shop";
 import ProductDetail from "@/pages/ProductDetail";
 import Cart from "@/pages/Cart";
+import OrderStatus from "@/pages/OrderStatus";
 import NotFound from "@/pages/not-found";
 
 function ScrollToTop() {
@@ -66,6 +67,7 @@ function Router() {
         <Route path="/portfolio" component={Portfolio} />
         <Route path="/shop" component={Shop} />
         <Route path="/shop/:slug" component={ProductDetail} />
+        <Route path="/order/:orderNumber" component={OrderStatus} />
         <Route path="/cart" component={Cart} />
         <Route component={NotFound} />
       </Switch>

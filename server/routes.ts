@@ -13,6 +13,8 @@ import {
 import {
   sendInquiryNotificationToAdmin,
   sendInquiryConfirmationToCustomer,
+  sendOrderNotificationToAdmin,
+  sendOrderConfirmationToCustomer,
 } from "./email";
 import {
   getSiteConfig,
@@ -141,6 +143,14 @@ export async function registerRoutes(
         usdToCrcRate: usdToCrc,
       });
 
+      // Fire-and-forget email notifications
+      sendOrderNotificationToAdmin(order).catch((err) =>
+        console.error("[email] Unexpected:", err instanceof Error ? err.message : "Unknown error")
+      );
+      sendOrderConfirmationToCustomer(order).catch((err) =>
+        console.error("[email] Unexpected:", err instanceof Error ? err.message : "Unknown error")
+      );
+
       res.status(201).json({
         id: order.id,
         orderNumber: order.orderNumber,
@@ -195,7 +205,47 @@ export async function registerRoutes(
     },
   );
 
-  // Submit proof for an order
+  // Re-upload proof by order number (for public status page)
+  // Registered before /:id/proof to prevent Express matching "TTW-0001" as :id
+  app.post("/api/orders/:orderNumber/reupload", orderLimiter, async (req, res) => {
+    try {
+      const orderNum = Array.isArray(req.params.orderNumber) ? req.params.orderNumber[0] : req.params.orderNumber;
+      const order = await getOrderByNumber(orderNum ?? "");
+      if (!order) return res.status(404).json({ message: "Pedido no encontrado" });
+
+      if (order.paymentStatus !== "pending" && order.paymentStatus !== "rejected") {
+        return res
+          .status(400)
+          .json({ message: "No se puede subir comprobante para este pedido" });
+      }
+
+      const input = api.orders.uploadProof.input.parse(req.body);
+      const updated = await updateOrderProof(
+        order.id,
+        input.proofImageUrl,
+        input.transactionRef,
+      );
+
+      if (updated) {
+        sendOrderNotificationToAdmin(updated).catch((err) =>
+          console.error("[email] Unexpected:", err instanceof Error ? err.message : "Unknown error")
+        );
+      }
+
+      res.json({ paymentStatus: updated!.paymentStatus });
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({
+          message: err.errors[0].message,
+          field: err.errors[0].path.join("."),
+        });
+      }
+      console.error("POST /api/orders/:orderNumber/reupload:", err instanceof Error ? err.message : "Unknown error");
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Submit proof for an order (by numeric ID)
   app.post("/api/orders/:id/proof", async (req, res) => {
     try {
       const id = parseInt(req.params.id, 10);
@@ -217,6 +267,13 @@ export async function registerRoutes(
         input.proofImageUrl,
         input.transactionRef,
       );
+
+      // Notify admin that proof was uploaded
+      if (updated) {
+        sendOrderNotificationToAdmin(updated).catch((err) =>
+          console.error("[email] Unexpected:", err instanceof Error ? err.message : "Unknown error")
+        );
+      }
 
       res.json({ paymentStatus: updated!.paymentStatus });
     } catch (err) {

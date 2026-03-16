@@ -36,6 +36,10 @@ import {
   getPendingOrderCount,
 } from "./storage-admin";
 import { requireAdmin } from "./auth";
+import {
+  sendOrderApprovedToCustomer,
+  sendOrderRejectedToCustomer,
+} from "./email";
 import { asc } from "drizzle-orm";
 import { DEFAULT_SITE_CONFIG } from "../shared/defaults";
 import { siteConfig, navCards, galleryWorks, products } from "../shared/schema";
@@ -491,6 +495,10 @@ export function registerAdminRoutes(app: Express) {
       const order = await approveOrder(id, input.adminNote);
       if (!order) return res.status(404).json({ message: "Not found" });
 
+      sendOrderApprovedToCustomer(order).catch((err) =>
+        console.error("[email] Unexpected:", err instanceof Error ? err.message : "Unknown error")
+      );
+
       res.json(order);
     } catch (err) {
       if (handleZodError(err, res)) return;
@@ -508,6 +516,10 @@ export function registerAdminRoutes(app: Express) {
       const input = ordersApi.reject.input.parse(req.body);
       const order = await rejectOrder(id, input.adminNote);
       if (!order) return res.status(404).json({ message: "Not found" });
+
+      sendOrderRejectedToCustomer(order).catch((err) =>
+        console.error("[email] Unexpected:", err instanceof Error ? err.message : "Unknown error")
+      );
 
       res.json(order);
     } catch (err) {

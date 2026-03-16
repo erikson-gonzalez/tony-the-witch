@@ -1,8 +1,12 @@
 import { Resend } from "resend";
-import type { Inquiry } from "../shared/schema";
+import type { Inquiry, Order } from "../shared/schema";
 import {
   buildInquiryAdminNotification,
   buildInquiryCustomerConfirmation,
+  buildOrderAdminNotification,
+  buildOrderCustomerConfirmation,
+  buildOrderApprovedNotification,
+  buildOrderRejectedNotification,
 } from "./email-templates";
 
 let resend: Resend | null = null;
@@ -53,5 +57,77 @@ export async function sendInquiryConfirmationToCustomer(
     });
   } catch (err) {
     console.error("[email] Failed to send customer confirmation:", err instanceof Error ? err.message : "Unknown error");
+  }
+}
+
+export async function sendOrderNotificationToAdmin(
+  order: Order
+): Promise<void> {
+  if (!resend || !ADMIN_EMAIL) return;
+
+  try {
+    const { subject, html } = buildOrderAdminNotification(order);
+    await resend.emails.send({
+      from: FROM_EMAIL,
+      to: ADMIN_EMAIL,
+      subject,
+      html,
+    });
+  } catch (err) {
+    console.error("[email] Failed to send order admin notification:", err instanceof Error ? err.message : "Unknown error");
+  }
+}
+
+export async function sendOrderConfirmationToCustomer(
+  order: Order
+): Promise<void> {
+  if (!resend || !order.customerEmail) return;
+
+  try {
+    const { subject, html } = buildOrderCustomerConfirmation(order);
+    await resend.emails.send({
+      from: FROM_EMAIL,
+      to: order.customerEmail,
+      subject,
+      html,
+    });
+  } catch (err) {
+    console.error("[email] Failed to send order confirmation:", err instanceof Error ? err.message : "Unknown error");
+  }
+}
+
+export async function sendOrderApprovedToCustomer(
+  order: Order
+): Promise<void> {
+  if (!resend || !order.customerEmail) return;
+
+  try {
+    const { subject, html } = buildOrderApprovedNotification(order);
+    await resend.emails.send({
+      from: FROM_EMAIL,
+      to: order.customerEmail,
+      subject,
+      html,
+    });
+  } catch (err) {
+    console.error("[email] Failed to send order approved email:", err instanceof Error ? err.message : "Unknown error");
+  }
+}
+
+export async function sendOrderRejectedToCustomer(
+  order: Order
+): Promise<void> {
+  if (!resend || !order.customerEmail) return;
+
+  try {
+    const { subject, html } = buildOrderRejectedNotification(order);
+    await resend.emails.send({
+      from: FROM_EMAIL,
+      to: order.customerEmail,
+      subject,
+      html,
+    });
+  } catch (err) {
+    console.error("[email] Failed to send order rejected email:", err instanceof Error ? err.message : "Unknown error");
   }
 }
