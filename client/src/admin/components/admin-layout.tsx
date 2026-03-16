@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import { useAdminAuth } from "../context/admin-auth-context";
+import { adminApi } from "@/api/admin";
 import {
   LayoutDashboard,
   Settings,
@@ -10,10 +12,12 @@ import {
   LogOut,
   Menu,
   X,
+  Package,
 } from "lucide-react";
 
 const NAV_ITEMS = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/admin/orders", label: "Pedidos", icon: Package, badge: true },
   { href: "/admin/config", label: "Configuración", icon: Settings },
   { href: "/admin/nav-cards", label: "Nav Cards", icon: LayoutGrid },
   { href: "/admin/gallery", label: "Galería", icon: Image },
@@ -34,9 +38,16 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     return location.startsWith(href);
   };
 
+  const { data: pendingData } = useQuery({
+    queryKey: ["admin", "orders", "pending-count"],
+    queryFn: () => adminApi.orders.pendingCount(),
+    refetchInterval: 30000,
+  });
+  const pendingCount = pendingData?.count ?? 0;
+
   const NavLinks = () => (
     <>
-      {NAV_ITEMS.map(({ href, label, icon: Icon }) => (
+      {NAV_ITEMS.map(({ href, label, icon: Icon, ...rest }) => (
         <Link
           key={href}
           href={href}
@@ -49,6 +60,11 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         >
           <Icon size={18} />
           {label}
+          {"badge" in rest && rest.badge && pendingCount > 0 && (
+            <span className="ml-auto bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+              {pendingCount}
+            </span>
+          )}
         </Link>
       ))}
     </>

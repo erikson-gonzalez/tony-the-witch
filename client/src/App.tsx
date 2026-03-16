@@ -16,6 +16,8 @@ import { AdminGalleryPage } from "@/admin/pages/admin-gallery";
 import { AdminGalleryFormPage } from "@/admin/pages/admin-gallery-form-page";
 import { AdminProductsPage } from "@/admin/pages/admin-products";
 import { AdminProductFormPage } from "@/admin/pages/admin-product-form-page";
+import { AdminOrdersPage } from "@/admin/pages/admin-orders";
+import { AdminOrderDetailPage } from "@/admin/pages/admin-order-detail";
 import Home from "@/pages/Home";
 import Portfolio from "@/pages/Portfolio";
 import Shop from "@/pages/Shop";
@@ -49,12 +51,14 @@ function Router() {
       <ScrollToTop />
       <AdminThemeEffect />
       <Switch>
+        <Route path="/admin/orders/:id" component={AdminOrderDetailWrapper} />
         <Route path="/admin/products/new" component={AdminProductFormWrapper} />
         <Route path="/admin/products/:id" component={AdminProductFormWrapper} />
         <Route path="/admin/gallery/new" component={AdminGalleryFormWrapper} />
         <Route path="/admin/gallery/:id" component={AdminGalleryFormWrapper} />
         <Route path="/admin/config" component={AdminWrapper} />
         <Route path="/admin/nav-cards" component={AdminWrapper} />
+        <Route path="/admin/orders" component={AdminWrapper} />
         <Route path="/admin/gallery" component={AdminWrapper} />
         <Route path="/admin/products" component={AdminWrapper} />
         <Route path="/admin" component={AdminWrapper} />
@@ -77,6 +81,7 @@ function AdminWrapper() {
     "/admin/nav-cards": AdminNavCardsPage,
     "/admin/gallery": AdminGalleryPage,
     "/admin/products": AdminProductsPage,
+    "/admin/orders": AdminOrdersPage,
   };
   const Component = routeMap[path] ?? AdminDashboardPage;
 
@@ -91,6 +96,14 @@ function AdminProductFormWrapper() {
   return (
     <AdminRouteGuard>
       <AdminProductFormPage />
+    </AdminRouteGuard>
+  );
+}
+
+function AdminOrderDetailWrapper() {
+  return (
+    <AdminRouteGuard>
+      <AdminOrderDetailPage />
     </AdminRouteGuard>
   );
 }

@@ -93,4 +93,68 @@ export const adminApi = {
     delete: (id: number) =>
       adminMutation("DELETE", `${BASE}/products/${id}`),
   },
+
+  orders: {
+    list: (params?: { status?: string; page?: number }) => {
+      const qs = new URLSearchParams();
+      if (params?.status) qs.set("status", params.status);
+      if (params?.page) qs.set("page", String(params.page));
+      const query = qs.toString();
+      return adminFetch<{
+        orders: AdminOrder[];
+        total: number;
+        page: number;
+        totalPages: number;
+      }>(`${BASE}/orders${query ? `?${query}` : ""}`);
+    },
+    get: (id: number) => adminFetch<AdminOrder>(`${BASE}/orders/${id}`),
+    approve: (id: number, adminNote?: string) =>
+      adminMutation<AdminOrder>("PUT", `${BASE}/orders/${id}/approve`, { adminNote }),
+    reject: (id: number, adminNote: string) =>
+      adminMutation<AdminOrder>("PUT", `${BASE}/orders/${id}/reject`, { adminNote }),
+    pendingCount: () =>
+      adminFetch<{ count: number }>(`${BASE}/orders/pending-count`),
+  },
 };
+
+export interface AdminOrder {
+  id: number;
+  orderNumber: string;
+  customerName: string;
+  customerEmail: string;
+  customerPhone: string | null;
+  customerNote: string | null;
+  items: Array<{
+    productId: number;
+    slug: string;
+    name: string;
+    priceUsd: number;
+    quantity: number;
+    size?: string;
+    color?: string;
+    image?: string;
+    isReservation?: boolean;
+  }>;
+  subtotalUsd: number;
+  shippingCrc: number;
+  totalUsd: number;
+  totalCrc: number;
+  usdToCrcRate: number;
+  shippingAddress: {
+    provincia: string;
+    canton: string;
+    distrito: string;
+    puntoReferencia?: string;
+    pais?: string;
+  } | null;
+  shippingZone: string | null;
+  shippingMethod: string | null;
+  paymentMethod: string;
+  paymentStatus: string;
+  proofImageUrl: string | null;
+  sinpeTransactionRef: string | null;
+  adminNote: string | null;
+  reviewedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
