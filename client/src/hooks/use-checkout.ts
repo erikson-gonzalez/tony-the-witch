@@ -186,6 +186,14 @@ export function useCheckout(
       setOrderId(data.id);
       setOrderNumber(data.orderNumber);
       setOrderTotalCrc(data.totalCrc);
+      import("@/hooks/use-analytics").then(({ trackEvent }) =>
+        trackEvent("complete_purchase", {
+          orderNumber: data.orderNumber,
+          totalUsd: totalPrice,
+          items: items.length,
+          paymentMethod,
+        }),
+      );
       return true;
     } catch {
       setFormErrors({ _api: "Error de conexión. Verificá tu internet e intentá de nuevo." });

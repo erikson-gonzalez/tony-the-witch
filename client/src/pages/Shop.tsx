@@ -10,7 +10,10 @@ import { formatPrice, getUsdToCrc } from "@/utils/formatPrice";
 import { getCategoryKey } from "@/utils/category-i18n";
 import { CUSTOM_SESSION_SLUG } from "@/constants/custom-session";
 import { OptimizedImage } from "@/components/optimized-image";
+import { Search, X } from "lucide-react";
 import type { ProductItem } from "@/types/content";
+
+type SortOption = "newest" | "price-asc" | "price-desc";
 
 /** Virtual product for custom tattoo session - always first in Otros */
 function getCustomSessionProduct(config: { tattooSession?: { name?: string; imageUrl?: string }; pricing?: { usdToCrc?: number } }): ProductItem {
@@ -34,20 +37,44 @@ export default function Shop() {
     description: "Merch exclusivo de Tony The Witch. Camisetas, prints y accesorios.",
   });
   const [activeCategory, setActiveCategory] = useState<string>("All");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState<SortOption>("newest");
   const { products, shopCategories, config, isLoading } = useContent();
 
   const usdToCrc = getUsdToCrc(config);
   const filtered = useMemo(() => {
-    const base =
+    let base =
       activeCategory === "All"
         ? products
         : products.filter((p) => p.category === activeCategory);
+
+    // Add custom session product when viewing "Otros"
     if (activeCategory === "Otros" && config?.tattooSession) {
       const customSession = getCustomSessionProduct(config);
-      return [customSession, ...base.filter((p) => p.slug !== CUSTOM_SESSION_SLUG)];
+      base = [customSession, ...base.filter((p) => p.slug !== CUSTOM_SESSION_SLUG)];
     }
+
+    // Search filter
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      base = base.filter(
+        (p) =>
+          p.name.toLowerCase().includes(q) ||
+          p.description?.toLowerCase().includes(q) ||
+          p.category.toLowerCase().includes(q),
+      );
+    }
+
+    // Sort
+    if (sortBy === "price-asc") {
+      base = [...base].sort((a, b) => a.price - b.price);
+    } else if (sortBy === "price-desc") {
+      base = [...base].sort((a, b) => b.price - a.price);
+    }
+    // "newest" keeps default sortOrder
+
     return base;
-  }, [products, activeCategory, config?.tattooSession]);
+  }, [products, activeCategory, config?.tattooSession, searchQuery, sortBy]);
 
   const categories = shopCategories.length > 0 ? shopCategories : ["All"];
   const title = config?.shop?.title ?? "Shop";
@@ -77,6 +104,37 @@ export default function Shop() {
             >
               {title}
             </h1>
+          </div>
+
+          {/* Search + Sort */}
+          <div className="flex flex-col sm:flex-row items-center gap-3 mb-8 max-w-xl mx-auto w-full">
+            <div className="relative flex-1 w-full">
+              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder={t("shop.searchPlaceholder", { defaultValue: "Buscar productos..." })}
+                className="w-full bg-transparent border border-white/10 text-white text-sm pl-9 pr-8 py-2.5 focus:outline-none focus:border-white/30 placeholder:text-gray-600"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white"
+                >
+                  <X size={14} />
+                </button>
+              )}
+            </div>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as SortOption)}
+              className="bg-transparent border border-white/10 text-gray-400 text-xs uppercase tracking-wider px-3 py-2.5 focus:outline-none focus:border-white/30 cursor-pointer"
+            >
+              <option value="newest">{t("shop.sortNewest", { defaultValue: "Más reciente" })}</option>
+              <option value="price-asc">{t("shop.sortPriceAsc", { defaultValue: "Precio: menor" })}</option>
+              <option value="price-desc">{t("shop.sortPriceDesc", { defaultValue: "Precio: mayor" })}</option>
+            </select>
           </div>
 
           <div
@@ -112,12 +170,21 @@ export default function Shop() {
           </div>
 
           {filtered.length === 0 && (
-            <p
-              className="text-center text-gray-500 py-20"
-              data-testid="text-shop-empty"
-            >
-              {t("shop.empty")}
-            </p>
+            <div className="text-center py-20">
+              <p className="text-gray-500 mb-4" data-testid="text-shop-empty">
+                {searchQuery
+                  ? t("shop.noResults", { defaultValue: "No encontramos productos con esa búsqueda." })
+                  : t("shop.empty")}
+              </p>
+              {searchQuery && (
+                <button
+                  onClick={() => { setSearchQuery(""); setActiveCategory("All"); }}
+                  className="text-sm text-white border border-white/20 px-4 py-2 hover:bg-white/10 transition-colors"
+                >
+                  {t("shop.clearFilters", { defaultValue: "Limpiar filtros" })}
+                </button>
+              )}
+            </div>
           )}
         </div>
       </main>

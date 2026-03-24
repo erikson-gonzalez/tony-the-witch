@@ -123,6 +123,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }
       return [...prev, { ...item, quantity: 1 }];
     });
+    import("@/hooks/use-analytics").then(({ trackEvent }) =>
+      trackEvent("add_to_cart", { productId: item.productId, name: item.name }),
+    );
   }, []);
 
   const removeItem = useCallback(
