@@ -1,10 +1,12 @@
 import { Link, useParams } from "wouter";
+import { useTranslation } from "react-i18next";
 import { AdminLayout } from "../components/admin-layout";
 import { useAdminProducts } from "../hooks/use-admin-products";
 import { ProductFormContent } from "../components/product-form-content";
 import { ArrowLeft } from "lucide-react";
 
 export function AdminProductFormPage() {
+  const { t } = useTranslation();
   const params = useParams<{ id?: string }>();
   const id = params.id === "new" ? null : params.id ? parseInt(params.id, 10) : null;
   const { products, isLoading, create, update, isMutating } = useAdminProducts();
@@ -38,9 +40,9 @@ export function AdminProductFormPage() {
     return (
       <AdminLayout>
         <div className="max-w-6xl mx-auto pt-6 text-center py-12 w-full">
-          <p className="text-slate-600 mb-4">Producto no encontrado</p>
+          <p className="text-slate-600 mb-4">{t("admin.productNotFound")}</p>
           <Link href="/admin/products">
-            <a className="text-slate-900 underline">Volver a productos</a>
+            <a className="text-slate-900 underline">{t("admin.backToProducts")}</a>
           </Link>
         </div>
       </AdminLayout>
@@ -69,11 +71,11 @@ export function AdminProductFormPage() {
         <Link href="/admin/products">
           <a className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900 mb-6">
             <ArrowLeft size={16} />
-            Volver a productos
+            {t("admin.backToProducts")}
           </a>
         </Link>
         <h1 className="text-xl sm:text-2xl font-bold text-slate-900 mb-6">
-          {isNew ? "Nuevo producto" : "Editar producto"}
+          {isNew ? t("admin.newProductTitle") : t("admin.editProduct")}
         </h1>
         <ProductFormContent
           initial={initial}

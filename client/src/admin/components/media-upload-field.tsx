@@ -1,4 +1,5 @@
 import { useCallback, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useUpload } from "../hooks/use-upload";
 
 const ALLOWED_IMAGE_TYPES = [
@@ -35,6 +36,7 @@ export function MediaUploadField({
   type: "image" | "video";
   folder?: string;
 }) {
+  const { t } = useTranslation();
   const [error, setError] = useState<string | null>(null);
   const { upload, isUploading } = useUpload();
 
@@ -47,8 +49,8 @@ export function MediaUploadField({
       if (!isAllowedMime(file, type)) {
         setError(
           type === "image"
-            ? "Solo imágenes (JPEG, PNG, WebP, GIF, SVG)."
-            : "Solo videos (MP4, WebM, OGG, QuickTime)."
+            ? t("admin.onlyImages")
+            : t("admin.onlyVideos")
         );
         e.target.value = "";
         return;
@@ -58,11 +60,11 @@ export function MediaUploadField({
         const result = await upload(file, folder);
         onChange(result.url);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Error al subir archivo.");
+        setError(err instanceof Error ? err.message : t("admin.uploadError"));
       }
       e.target.value = "";
     },
-    [type, onChange, upload, folder]
+    [type, onChange, upload, folder, t]
   );
 
   const clearMedia = useCallback(() => {
@@ -90,7 +92,7 @@ export function MediaUploadField({
       {isUploading && (
         <div className="mt-3 flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
           <div className="w-5 h-5 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin flex-shrink-0" />
-          <span className="text-sm text-slate-600">Subiendo archivo...</span>
+          <span className="text-sm text-slate-600">{t("admin.uploadingFile")}</span>
         </div>
       )}
       {error && (
@@ -101,7 +103,7 @@ export function MediaUploadField({
           {type === "image" ? (
             <img
               src={value}
-              alt="Vista previa"
+              alt=""
               className="h-20 w-20 object-cover rounded border border-slate-200 flex-shrink-0"
             />
           ) : (
@@ -117,9 +119,9 @@ export function MediaUploadField({
             type="button"
             onClick={clearMedia}
             className="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-md text-sm"
-            aria-label="Quitar archivo"
+            aria-label={t("admin.removeFile")}
           >
-            Quitar
+            {t("admin.removeFile")}
           </button>
         </div>
       )}

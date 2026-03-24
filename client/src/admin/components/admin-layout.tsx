@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { useAdminAuth } from "../context/admin-auth-context";
 import { adminApi } from "@/api/admin";
 import {
@@ -15,23 +16,24 @@ import {
   Package,
 } from "lucide-react";
 
-const NAV_ITEMS = [
-  { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/admin/orders", label: "Pedidos", icon: Package, badge: true },
-  { href: "/admin/config", label: "Configuración", icon: Settings },
-  { href: "/admin/nav-cards", label: "Nav Cards", icon: LayoutGrid },
-  { href: "/admin/gallery", label: "Galería", icon: Image },
-  { href: "/admin/products", label: "Productos", icon: ShoppingBag },
-] as const;
-
 interface AdminLayoutProps {
   children: React.ReactNode;
 }
 
 export function AdminLayout({ children }: AdminLayoutProps) {
+  const { t } = useTranslation();
   const [location] = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { username, logout } = useAdminAuth();
+
+  const NAV_ITEMS = [
+    { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/admin/orders", label: t("admin.orders"), icon: Package, badge: true },
+    { href: "/admin/config", label: t("admin.config"), icon: Settings },
+    { href: "/admin/nav-cards", label: t("admin.navCards"), icon: LayoutGrid },
+    { href: "/admin/gallery", label: t("admin.gallery"), icon: Image },
+    { href: "/admin/products", label: t("admin.products"), icon: ShoppingBag },
+  ] as const;
 
   const isActive = (href: string) => {
     if (href === "/admin") return location === "/admin";
@@ -77,7 +79,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         <button
           onClick={() => setSidebarOpen(true)}
           className="p-2 -ml-2 text-slate-600 hover:text-slate-900"
-          aria-label="Abrir menú"
+          aria-label={t("admin.openMenu")}
         >
           <Menu size={24} />
         </button>
@@ -128,7 +130,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             className="flex items-center gap-3 w-full px-4 py-3 rounded-lg text-sm font-medium text-slate-600 hover:bg-red-50 hover:text-red-600 transition-colors"
           >
             <LogOut size={18} />
-            Cerrar sesión
+            {t("admin.logout")}
           </button>
         </div>
       </aside>

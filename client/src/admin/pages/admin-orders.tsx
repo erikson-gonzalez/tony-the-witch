@@ -1,38 +1,13 @@
 import { useState } from "react";
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { AdminLayout } from "../components/admin-layout";
 import { adminApi, type AdminOrder } from "@/api/admin";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
-const STATUS_LABELS: Record<string, { label: string; className: string }> = {
-  pending: {
-    label: "Pendiente",
-    className: "bg-yellow-100 text-yellow-800",
-  },
-  proof_submitted: {
-    label: "Comprobante enviado",
-    className: "bg-blue-100 text-blue-800",
-  },
-  approved: {
-    label: "Aprobado",
-    className: "bg-green-100 text-green-800",
-  },
-  rejected: {
-    label: "Rechazado",
-    className: "bg-red-100 text-red-800",
-  },
-};
-
-const TABS = [
-  { key: "", label: "Todos" },
-  { key: "pending", label: "Pendientes" },
-  { key: "approved", label: "Aprobados" },
-  { key: "rejected", label: "Rechazados" },
-] as const;
-
-function formatDate(dateStr: string): string {
+function formatDate(dateStr: string, t: (key: string) => string): string {
   const date = new Date(dateStr);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
@@ -40,10 +15,10 @@ function formatDate(dateStr: string): string {
 
   if (diffHours < 1) {
     const mins = Math.floor(diffMs / (1000 * 60));
-    return `hace ${mins} min`;
+    return `${t("admin.ago")} ${mins} ${t("admin.agoMin")}`;
   }
   if (diffHours < 24) {
-    return `hace ${Math.floor(diffHours)}h`;
+    return `${t("admin.ago")} ${Math.floor(diffHours)}h`;
   }
   return date.toLocaleDateString("es-CR", {
     day: "numeric",
@@ -61,8 +36,35 @@ function formatCrc(colones: number): string {
 }
 
 export function AdminOrdersPage() {
+  const { t } = useTranslation();
   const [statusFilter, setStatusFilter] = useState("");
   const [page, setPage] = useState(1);
+
+  const STATUS_LABELS: Record<string, { label: string; className: string }> = {
+    pending: {
+      label: t("admin.statusPending"),
+      className: "bg-yellow-100 text-yellow-800",
+    },
+    proof_submitted: {
+      label: t("admin.statusProofSubmitted"),
+      className: "bg-blue-100 text-blue-800",
+    },
+    approved: {
+      label: t("admin.statusApproved"),
+      className: "bg-green-100 text-green-800",
+    },
+    rejected: {
+      label: t("admin.statusRejected"),
+      className: "bg-red-100 text-red-800",
+    },
+  };
+
+  const TABS = [
+    { key: "", label: t("admin.tabAll") },
+    { key: "pending", label: t("admin.tabPending") },
+    { key: "approved", label: t("admin.tabApproved") },
+    { key: "rejected", label: t("admin.tabRejected") },
+  ] as const;
 
   const { data, isLoading } = useQuery({
     queryKey: ["admin", "orders", statusFilter, page],
@@ -90,7 +92,7 @@ export function AdminOrdersPage() {
     <AdminLayout>
       <div className="max-w-6xl mx-auto pt-6 w-full">
         <h1 className="text-xl sm:text-2xl font-bold text-slate-900 mb-6">
-          Pedidos
+          {t("admin.ordersTitle")}
         </h1>
 
         <div className="flex gap-2 mb-4 overflow-x-auto">
@@ -114,7 +116,7 @@ export function AdminOrdersPage() {
 
         {orders.length === 0 ? (
           <div className="text-center py-12 text-slate-500">
-            <p>No hay pedidos</p>
+            <p>{t("admin.noOrders")}</p>
           </div>
         ) : (
           <>
@@ -123,19 +125,19 @@ export function AdminOrdersPage() {
                 <thead className="bg-slate-50 border-b border-slate-200">
                   <tr>
                     <th className="text-left px-4 sm:px-6 py-3 text-sm font-medium text-slate-600">
-                      Pedido
+                      {t("admin.tableOrder")}
                     </th>
                     <th className="text-left px-4 sm:px-6 py-3 text-sm font-medium text-slate-600">
-                      Cliente
+                      {t("admin.tableClient")}
                     </th>
                     <th className="text-left px-4 sm:px-6 py-3 text-sm font-medium text-slate-600">
-                      Total
+                      {t("admin.tableTotal")}
                     </th>
                     <th className="text-left px-4 sm:px-6 py-3 text-sm font-medium text-slate-600">
-                      Estado
+                      {t("admin.tableStatus")}
                     </th>
                     <th className="text-left px-4 sm:px-6 py-3 text-sm font-medium text-slate-600">
-                      Fecha
+                      {t("admin.tableDate")}
                     </th>
                   </tr>
                 </thead>
@@ -162,7 +164,7 @@ export function AdminOrdersPage() {
                               >
                                 {order.paymentMethod === "sinpe"
                                   ? "SINPE"
-                                  : "Tarjeta"}
+                                  : t("admin.paymentCard")}
                               </span>
                             </a>
                           </Link>
@@ -200,7 +202,7 @@ export function AdminOrdersPage() {
                         <td className="px-4 sm:px-6 py-3 text-sm text-slate-500">
                           <Link href={`/admin/orders/${order.id}`}>
                             <a className="block">
-                              {formatDate(order.createdAt)}
+                              {formatDate(order.createdAt, t)}
                             </a>
                           </Link>
                         </td>

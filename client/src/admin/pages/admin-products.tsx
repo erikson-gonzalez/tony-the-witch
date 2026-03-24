@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link } from "wouter";
+import { useTranslation } from "react-i18next";
 import { AdminLayout } from "../components/admin-layout";
 import { useAdminProducts } from "../hooks/use-admin-products";
 import { Button } from "@/components/ui/button";
@@ -24,6 +25,7 @@ interface ProductRow {
 }
 
 export function AdminProductsPage() {
+  const { t } = useTranslation();
   const { products, isLoading, remove, isMutating } = useAdminProducts();
   const [productToDelete, setProductToDelete] = useState<ProductRow | null>(null);
 
@@ -49,13 +51,13 @@ export function AdminProductsPage() {
       <div className="max-w-6xl mx-auto pt-6 w-full">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6 lg:mb-8">
         <h1 className="text-xl sm:text-2xl font-bold text-slate-900">
-          Productos
+          {t("admin.productsTitle")}
         </h1>
         <Link href="/admin/products/new">
           <a>
             <Button className="w-full sm:w-auto">
               <Plus size={18} className="mr-2" />
-              Nuevo producto
+              {t("admin.newProduct")}
             </Button>
           </a>
         </Link>
@@ -66,13 +68,13 @@ export function AdminProductsPage() {
           <thead className="bg-slate-50 border-b border-slate-200">
             <tr>
               <th className="text-left px-4 sm:px-6 py-3 sm:py-4 text-sm font-medium text-slate-600">
-                Producto
+                {t("admin.tableProduct")}
               </th>
               <th className="text-left px-4 sm:px-6 py-3 sm:py-4 text-sm font-medium text-slate-600">
-                Categoría
+                {t("admin.tableCategory")}
               </th>
               <th className="text-left px-4 sm:px-6 py-3 sm:py-4 text-sm font-medium text-slate-600">
-                Precio (CRC)
+                {t("admin.tablePriceCrc")}
               </th>
               <th className="w-20 sm:w-24 px-2" />
             </tr>
@@ -132,19 +134,19 @@ export function AdminProductsPage() {
       <AlertDialog open={!!productToDelete} onOpenChange={(open) => !open && setProductToDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>¿Eliminar producto?</AlertDialogTitle>
+            <AlertDialogTitle>{t("admin.deleteProduct")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Vas a eliminar &quot;{productToDelete?.name}&quot;. Esta acción no se puede deshacer.
+              {t("admin.deleteProductDesc", { name: productToDelete?.name })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel>{t("admin.cancel")}</AlertDialogCancel>
             <Button
               variant="destructive"
               onClick={() => void handleConfirmDelete()}
               disabled={isMutating}
             >
-              Eliminar
+              {t("admin.delete")}
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -152,10 +154,10 @@ export function AdminProductsPage() {
 
       {(products as unknown as ProductRow[]).length === 0 && (
         <div className="text-center py-12 text-slate-500">
-          <p className="mb-4">No hay productos</p>
+          <p className="mb-4">{t("admin.noProducts")}</p>
           <Link href="/admin/products/new">
             <a className="text-slate-900 font-medium underline">
-              Crear primer producto
+              {t("admin.createFirstProduct")}
             </a>
           </Link>
         </div>

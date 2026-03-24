@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { AdminLayout } from "../components/admin-layout";
 import { useAdminNavCards } from "../hooks/use-admin-nav-cards";
 import { Button } from "@/components/ui/button";
@@ -71,6 +72,7 @@ interface NavCardRow {
 }
 
 export function AdminNavCardsPage() {
+  const { t } = useTranslation();
   const { navCards, isLoading, create, update, remove, isMutating } =
     useAdminNavCards();
   const [editing, setEditing] = useState<NavCardRow | null>(null);
@@ -118,7 +120,7 @@ export function AdminNavCardsPage() {
     <AdminLayout>
       <div className="max-w-6xl mx-auto pt-6 w-full">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6 lg:mb-8">
-        <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Nav Cards</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-slate-900">{t("admin.navCardsTitle")}</h1>
       </div>
 
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden overflow-x-auto">
@@ -126,13 +128,13 @@ export function AdminNavCardsPage() {
           <thead className="bg-slate-50 border-b border-slate-200">
             <tr>
               <th className="text-left px-4 sm:px-6 py-3 sm:py-4 text-sm font-medium text-slate-600">
-                Título
+                {t("admin.tableTitle")}
               </th>
               <th className="text-left px-4 sm:px-6 py-3 sm:py-4 text-sm font-medium text-slate-600">
-                Subtítulo
+                {t("admin.tableSubtitle")}
               </th>
               <th className="text-left px-4 sm:px-6 py-3 sm:py-4 text-sm font-medium text-slate-600">
-                URL
+                {t("admin.tableUrl")}
               </th>
               <th className="w-20 sm:w-24 px-2" />
             </tr>
@@ -169,7 +171,7 @@ export function AdminNavCardsPage() {
       </div>
 
       <div className="mt-8">
-        <h3 className="text-sm font-medium text-slate-700 mb-4">Vista previa</h3>
+        <h3 className="text-sm font-medium text-slate-700 mb-4">{t("admin.preview")}</h3>
         <div className="bg-slate-900 rounded-xl p-6">
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
             {(navCards as unknown as NavCardRow[]).map((card, index) => (
@@ -187,10 +189,10 @@ export function AdminNavCardsPage() {
       <div className="mt-8 p-4 bg-slate-50 rounded-xl border border-slate-200">
         <h3 className="text-sm font-medium text-slate-700 mb-3 flex items-center gap-2">
           <RotateCcw size={16} />
-          Recuperar tarjeta por defecto
+          {t("admin.recoverCard")}
         </h3>
         <p className="text-xs text-slate-500 mb-3">
-          Si eliminaste una tarjeta, podés recuperarla con una de estas plantillas:
+          {t("admin.recoverCardHint")}
         </p>
         <div className="flex flex-wrap gap-2">
           {DEFAULT_NAV_CARDS.map((template) => (
@@ -212,20 +214,19 @@ export function AdminNavCardsPage() {
       <AlertDialog open={!!cardToDelete} onOpenChange={(open) => !open && setCardToDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>¿Eliminar tarjeta?</AlertDialogTitle>
+            <AlertDialogTitle>{t("admin.deleteCard")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Vas a eliminar la tarjeta &quot;{cardToDelete?.title}&quot;. Esta acción no se puede deshacer.
-              Podés recuperarla después con &quot;Recuperar tarjeta por defecto&quot;.
+              {t("admin.deleteCardDesc", { title: cardToDelete?.title })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel>{t("admin.cancel")}</AlertDialogCancel>
             <Button
               variant="destructive"
               onClick={() => void handleConfirmDelete()}
               disabled={isMutating}
             >
-              Eliminar
+              {t("admin.delete")}
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -255,6 +256,7 @@ function NavCardForm({
   onClose: () => void;
   isLoading: boolean;
 }) {
+  const { t } = useTranslation();
   const [title, setTitle] = useState(initial?.title ?? "");
   const [subtitle, setSubtitle] = useState(initial?.subtitle ?? "");
   const [href, setHref] = useState(initial?.href ?? ROUTE_OPTIONS[0]?.href ?? "");
@@ -310,18 +312,18 @@ function NavCardForm({
             <DialogTitle>Contact (WhatsApp)</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-slate-500 -mt-2">
-            Solo podés modificar la imagen y el número de teléfono para Costa Rica (+506).
+            {t("admin.whatsappOnlyHint")}
           </p>
           <form onSubmit={handleSubmit} className="space-y-4">
             <MediaUploadField
-              label="Imagen"
+              label={t("admin.image")}
               type="image"
               folder="nav-cards"
               value={image}
               onChange={setImage}
             />
             <div>
-              <Label>Número de teléfono (CR)</Label>
+              <Label>{t("admin.phoneLabel")}</Label>
               <div className="flex items-center gap-2 mt-1">
                 <span className="text-slate-500 text-sm">+506</span>
                 <Input
@@ -333,18 +335,18 @@ function NavCardForm({
                 />
               </div>
               <p className="text-xs text-slate-400 mt-1">
-                8 dígitos, sin espacios ni guiones
+                {t("admin.phoneHint")}
               </p>
             </div>
             <div className="flex justify-end gap-2 pt-4">
               <Button type="button" variant="outline" onClick={onClose}>
-                Cancelar
+                {t("admin.cancel")}
               </Button>
               <Button
                 type="submit"
                 disabled={isLoading || phoneNumber.replace(/\D/g, "").length < 8}
               >
-                {isLoading ? "Guardando..." : "Guardar"}
+                {isLoading ? t("admin.saving") : t("admin.save")}
               </Button>
             </div>
           </form>
@@ -358,14 +360,14 @@ function NavCardForm({
       <Dialog open onOpenChange={() => onClose()}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Editar imagen</DialogTitle>
+            <DialogTitle>{t("admin.editImage")}</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-slate-500 -mt-2">
-            Solo podés cambiar la imagen. El título y subtítulo se muestran según el idioma del sitio.
+            {t("admin.editImageHint")}
           </p>
           <form onSubmit={handleSubmit} className="space-y-4">
             <MediaUploadField
-              label="Imagen"
+              label={t("admin.image")}
               type="image"
               folder="nav-cards"
               value={image}
@@ -373,10 +375,10 @@ function NavCardForm({
             />
             <div className="flex justify-end gap-2 pt-4">
               <Button type="button" variant="outline" onClick={onClose}>
-                Cancelar
+                {t("admin.cancel")}
               </Button>
               <Button type="submit" disabled={isLoading || !image.trim()}>
-                {isLoading ? "Guardando..." : "Guardar"}
+                {isLoading ? t("admin.saving") : t("admin.save")}
               </Button>
             </div>
           </form>
@@ -389,19 +391,19 @@ function NavCardForm({
     <Dialog open onOpenChange={() => onClose()}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{initial ? "Editar" : "Nueva"} tarjeta</DialogTitle>
+          <DialogTitle>{initial ? t("admin.editCard") : t("admin.newCard")}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <Label>Título</Label>
+            <Label>{t("admin.title")}</Label>
             <Input value={title} onChange={(e) => setTitle(e.target.value)} required />
           </div>
           <div>
-            <Label>Subtítulo</Label>
+            <Label>{t("admin.subtitle")}</Label>
             <Input value={subtitle} onChange={(e) => setSubtitle(e.target.value)} />
           </div>
           <div>
-            <Label className="text-slate-500">URL</Label>
+            <Label className="text-slate-500">{t("admin.urlLabel")}</Label>
             {initial ? (
               <Input
                 value={href}
@@ -416,7 +418,7 @@ function NavCardForm({
                 required
               >
                 <SelectTrigger className="bg-slate-100 text-slate-500 border-slate-200">
-                  <SelectValue placeholder="Seleccionar ruta" />
+                  <SelectValue placeholder={t("admin.selectRoute")} />
                 </SelectTrigger>
                 <SelectContent>
                   {ROUTE_OPTIONS.map((r) => (
@@ -428,11 +430,11 @@ function NavCardForm({
               </Select>
             )}
             <p className="text-xs text-slate-400 mt-1">
-              Contactá a soporte para cambiar la ruta
+              {t("admin.routeChangeHint")}
             </p>
           </div>
           <MediaUploadField
-            label="Imagen"
+            label={t("admin.image")}
             type="image"
             folder="nav-cards"
             value={image}
@@ -446,14 +448,14 @@ function NavCardForm({
               onChange={(e) => setExternal(e.target.checked)}
               className="rounded border-slate-300"
             />
-            <Label htmlFor="external">Enlace externo</Label>
+            <Label htmlFor="external">{t("admin.externalLink")}</Label>
           </div>
           <div className="flex justify-end gap-2 pt-4">
             <Button type="button" variant="outline" onClick={onClose}>
-              Cancelar
+              {t("admin.cancel")}
             </Button>
             <Button type="submit" disabled={isLoading || !image.trim()}>
-              {isLoading ? "Guardando..." : "Guardar"}
+              {isLoading ? t("admin.saving") : t("admin.save")}
             </Button>
           </div>
         </form>

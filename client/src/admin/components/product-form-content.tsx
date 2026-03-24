@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -53,6 +54,7 @@ export function ProductFormContent({
   onSave,
   isLoading,
 }: ProductFormContentProps) {
+  const { t } = useTranslation();
   const { config } = useContent();
   const categories =
     (config?.shop?.categories ?? []).filter((c) => c !== "All") || [
@@ -381,7 +383,7 @@ export function ProductFormContent({
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="grid gap-6 sm:grid-cols-2">
         <div>
-          <Label className="text-slate-700">Slug (URL)</Label>
+          <Label className="text-slate-700">{t("admin.slugLabel")}</Label>
           <Input
             value={slug}
             onChange={(e) => setSlug(e.target.value)}
@@ -392,7 +394,7 @@ export function ProductFormContent({
           />
         </div>
         <div>
-          <Label className="text-slate-700">Nombre</Label>
+          <Label className="text-slate-700">{t("admin.nameLabel")}</Label>
           <Input
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -404,10 +406,10 @@ export function ProductFormContent({
 
       <div className="grid gap-6 sm:grid-cols-2">
         <div>
-          <Label className="text-slate-700">Categoría</Label>
+          <Label className="text-slate-700">{t("admin.categoryLabel")}</Label>
           <Select value={category} onValueChange={setCategory} required>
             <SelectTrigger className="mt-1 h-12 bg-white border-slate-300 text-slate-900">
-              <SelectValue placeholder="Seleccionar categoría" />
+              <SelectValue placeholder={t("admin.selectCategory")} />
             </SelectTrigger>
             <SelectContent>
               {categories.map((c) => (
@@ -419,7 +421,7 @@ export function ProductFormContent({
           </Select>
         </div>
         <div>
-          <Label className="text-slate-700">Precio (CRC)</Label>
+          <Label className="text-slate-700">{t("admin.priceCrc")}</Label>
           <Input
             type="text"
             inputMode="decimal"
@@ -432,22 +434,26 @@ export function ProductFormContent({
             className="mt-1 bg-white border-slate-300 text-slate-900 placeholder:text-slate-500"
           />
           <p className="text-xs text-slate-500 mt-1">
-            El precio se ingresa en colones. La conversión usa 1 USD = 500 colones (configurable en Configuración del sitio → Precios).
+            {t("admin.priceHint")}
           </p>
-          {/* Calculadora de comisiones */}
+          {/* Fee calculator */}
           <div className="mt-4 p-3 rounded-lg bg-slate-100 border border-slate-200 space-y-3">
             <p className="text-xs font-medium text-slate-600 flex items-center gap-1">
-              <span>Comisiones: PayPal {FEE_LABELS.paypal} + Plataforma {FEE_LABELS.platform}</span>
+              <span>{t("admin.feeCalculator", { paypal: FEE_LABELS.paypal, platform: FEE_LABELS.platform })}</span>
             </p>
             {price && parseFormattedAmount(price, true) > 0 && (
-              <p className="text-sm text-slate-700">
-                Si cobras <strong>₡{parseFormattedAmount(price, true).toLocaleString("es-CR")}</strong> → Recibes aprox:{" "}
-                <strong className="text-slate-900">₡{calculateNetAmount(parseFormattedAmount(price, true) || 0).toLocaleString("es-CR")}</strong>
-              </p>
+              <p className="text-sm text-slate-700"
+                dangerouslySetInnerHTML={{
+                  __html: t("admin.feeIfCharge", {
+                    price: parseFormattedAmount(price, true).toLocaleString("es-CR"),
+                    net: calculateNetAmount(parseFormattedAmount(price, true) || 0).toLocaleString("es-CR"),
+                  }),
+                }}
+              />
             )}
             <div className="flex flex-wrap items-end gap-2">
               <div className="flex-1 min-w-[140px]">
-                <Label className="text-xs text-slate-500">Quiero recibir ₡</Label>
+                <Label className="text-xs text-slate-500">{t("admin.feeDesiredNet")}</Label>
                 <Input
                   type="text"
                   inputMode="numeric"
@@ -461,7 +467,13 @@ export function ProductFormContent({
               </div>
               {desiredNetInput && parseFormattedAmount(desiredNetInput, false) > 0 && (
                 <p className="text-sm text-slate-700 pb-1">
-                  Debe cobrar: <strong className="text-slate-900">₡{calculateRequiredPrice(parseFormattedAmount(desiredNetInput, false) || 0).toLocaleString("es-CR")}</strong>
+                  <span
+                    dangerouslySetInnerHTML={{
+                      __html: t("admin.feeMustCharge", {
+                        price: calculateRequiredPrice(parseFormattedAmount(desiredNetInput, false) || 0).toLocaleString("es-CR"),
+                      }),
+                    }}
+                  />
                   <button
                     type="button"
                     onClick={() => {
@@ -471,7 +483,7 @@ export function ProductFormContent({
                     }}
                     className="ml-2 text-xs text-slate-600 hover:text-slate-900 underline"
                   >
-                    Usar precio
+                    {t("admin.feeUsePrice")}
                   </button>
                 </p>
               )}
@@ -481,7 +493,7 @@ export function ProductFormContent({
       </div>
 
       <div>
-        <Label className="text-slate-700">Descripción</Label>
+        <Label className="text-slate-700">{t("admin.descriptionLabel")}</Label>
         <Textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
@@ -492,7 +504,7 @@ export function ProductFormContent({
       </div>
 
       <div>
-        <Label className="text-slate-700">Imágenes (máx. {MAX_IMAGES})</Label>
+        <Label className="text-slate-700">{t("admin.imagesMax", { max: MAX_IMAGES })}</Label>
         <div className="flex flex-wrap gap-2 mt-2">
           {images.map((item, i) => (
             <div
@@ -533,10 +545,10 @@ export function ProductFormContent({
         </div>
       </div>
 
-      {/* 1. Colores primero - solo nombres */}
+      {/* 1. Colors first - names only */}
       <div className="bg-white rounded-lg border border-slate-200 p-4">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-3">
-          <Label className="text-slate-700">Colores y stock</Label>
+          <Label className="text-slate-700">{t("admin.colorsAndStock")}</Label>
           <Button
             type="button"
             variant="outline"
@@ -544,14 +556,14 @@ export function ProductFormContent({
             onClick={addColorRow}
           >
             <Plus size={14} className="mr-1" />
-            Añadir color
+            {t("admin.addColor")}
           </Button>
         </div>
         <div className="space-y-3">
           {colorRows.map((row, i) => (
             <div key={i} className="flex items-center gap-2">
               <Input
-                placeholder="Nombre color"
+                placeholder={t("admin.colorNamePlaceholder")}
                 value={row.name}
                 onChange={(e) => updateColorRow(i, e.target.value)}
                 className="flex-1 max-w-xs bg-white border-slate-300 text-slate-900 placeholder:text-slate-500"
@@ -567,11 +579,11 @@ export function ProductFormContent({
           ))}
         </div>
         <p className="text-xs text-slate-500 mt-2">
-          Añade al menos un color para habilitar las tallas
+          {t("admin.colorsHint")}
         </p>
       </div>
 
-      {/* Checkbox: No requiere tallas */}
+      {/* Checkbox: No sizes required */}
       <div className="bg-white rounded-lg border border-slate-200 p-4">
         <div className="flex items-center gap-2">
           <Checkbox
@@ -580,18 +592,18 @@ export function ProductFormContent({
             onCheckedChange={(c) => setNoSizesRequired(!!c)}
           />
           <Label htmlFor="noSizesRequired" className="font-normal text-slate-700 cursor-pointer">
-            No requiere tallas (solo stock)
+            {t("admin.noSizesRequired")}
           </Label>
         </div>
         <p className="text-xs text-slate-500 mt-1 ml-6">
-          Para productos como prints, gift cards o artículos sin talla. Solo defines el stock por color o el total.
+          {t("admin.noSizesHint")}
         </p>
       </div>
 
-      {/* 2a. Solo stock - cuando no requiere tallas */}
+      {/* 2a. Stock only - when no sizes required */}
       {noSizesRequired && (
         <div className="bg-white rounded-lg border border-slate-200 p-4">
-          <Label className="mb-3 block text-slate-700">Stock</Label>
+          <Label className="mb-3 block text-slate-700">{t("admin.stock")}</Label>
           {colorsEnabled.length > 0 ? (
             <div className="space-y-3 max-w-sm">
               {colorsEnabled.map(({ name: color }) => (
@@ -615,18 +627,18 @@ export function ProductFormContent({
                 min={0}
                 value={stockTotalOnly}
                 onChange={(e) => setStockTotalOnly(e.target.value)}
-                placeholder="Stock total"
+                placeholder={t("admin.stockTotalPlaceholder")}
                 className="bg-white border-slate-300 text-slate-900 placeholder:text-slate-500"
               />
               <p className="text-xs text-slate-500 mt-1">
-                Si no hay colores, ingresa el stock total del producto
+                {t("admin.stockTotalHint")}
               </p>
             </div>
           )}
         </div>
       )}
 
-      {/* 2b. Tallas - habilitadas solo cuando hay colores y SÍ requiere tallas */}
+      {/* 2b. Sizes - enabled only when colors exist and sizes are required */}
       {!noSizesRequired && (
       <div
         className={`bg-white rounded-lg border border-slate-200 p-4 transition-opacity ${
@@ -634,21 +646,20 @@ export function ProductFormContent({
         }`}
       >
         <div className="flex items-center gap-2 mb-3">
-          <Label className="text-slate-700">Tallas y stock</Label>
+          <Label className="text-slate-700">{t("admin.sizesAndStock")}</Label>
           <Tooltip>
             <TooltipTrigger asChild>
               <button
                 type="button"
                 className="text-slate-400 hover:text-slate-600 p-0.5 rounded"
-                aria-label="Ayuda"
+                aria-label="Help"
               >
                 <HelpCircle size={16} />
               </button>
             </TooltipTrigger>
             <TooltipContent side="right" className="max-w-xs">
               <p className="text-sm">
-                Define las tallas disponibles (XS, S, M, L…) y el stock por color para cada una.
-                Así el cliente puede elegir su talla y color al comprar.
+                {t("admin.sizesHelpTooltip")}
               </p>
             </TooltipContent>
           </Tooltip>
@@ -663,8 +674,8 @@ export function ProductFormContent({
                   gridTemplateColumns: `120px 70px repeat(${colorsEnabled.length}, 80px)`,
                 }}
               >
-                <span>Talla</span>
-                <span>Total</span>
+                <span>{t("admin.sizeLabel")}</span>
+                <span>{t("admin.totalLabel")}</span>
                 {colorsEnabled.map(({ name: c }) => (
                   <span key={c} className="truncate" title={c}>
                     {c}
@@ -702,7 +713,6 @@ export function ProductFormContent({
                           type="button"
                           onClick={() => removeCustomSize(row.id)}
                           className="p-1.5 text-slate-500 hover:text-red-600 shrink-0"
-                          title="Quitar talla"
                         >
                           <X size={14} />
                         </button>
@@ -745,12 +755,12 @@ export function ProductFormContent({
               className="mt-3"
             >
               <Plus size={14} className="mr-1" />
-              Agregar otra talla
+              {t("admin.addCustomSize")}
             </Button>
           </div>
         ) : (
           <p className="text-sm text-slate-500 italic">
-            Añade al menos un color arriba para configurar tallas y stock
+            {t("admin.noColorsForSizes")}
           </p>
         )}
       </div>
@@ -758,7 +768,7 @@ export function ProductFormContent({
 
       <div className="flex flex-col-reverse sm:flex-row gap-2 sm:justify-end pt-4">
         <Button type="submit" disabled={isLoading || isUploading || images.length === 0}>
-          {isUploading ? "Subiendo imágenes..." : isLoading ? "Guardando..." : "Guardar"}
+          {isUploading ? t("admin.uploadingImages") : isLoading ? t("admin.saving") : t("admin.save")}
         </Button>
       </div>
     </form>

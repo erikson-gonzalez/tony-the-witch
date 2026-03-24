@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { Link, useParams } from "wouter";
+import { useTranslation } from "react-i18next";
 import { AdminLayout } from "../components/admin-layout";
 import { useAdminGallery } from "../hooks/use-admin-gallery";
 import { useUpload } from "../hooks/use-upload";
@@ -22,6 +23,7 @@ const MAX_IMAGES_PER_CATEGORY = 18;
 type ImageItem = { url: string };
 
 export function AdminGalleryFormPage() {
+  const { t } = useTranslation();
   const params = useParams<{ id?: string }>();
   const id = params.id === "new" ? null : params.id ? parseInt(params.id, 10) : null;
   const { works, isLoading, create, createBatch, update, isMutating } = useAdminGallery();
@@ -84,7 +86,7 @@ export function AdminGalleryFormPage() {
       if (!category.trim()) return;
       if (images.length > remainingInCategory) {
         alert(
-          `La categoría "${category}" solo puede tener ${remainingInCategory} imágenes más (máx. ${MAX_IMAGES_PER_CATEGORY} por categoría).`
+          t("admin.categoryLimitAlert", { category, remaining: remainingInCategory, max: MAX_IMAGES_PER_CATEGORY })
         );
         return;
       }
@@ -133,9 +135,9 @@ export function AdminGalleryFormPage() {
     return (
       <AdminLayout>
         <div className="max-w-6xl mx-auto pt-6 text-center py-12 w-full">
-          <p className="text-slate-600 mb-4">Obra no encontrada</p>
+          <p className="text-slate-600 mb-4">{t("admin.workNotFound")}</p>
           <Link href="/admin/gallery">
-            <a className="text-slate-900 underline">Volver a galería</a>
+            <a className="text-slate-900 underline">{t("admin.backToGallery")}</a>
           </Link>
         </div>
       </AdminLayout>
@@ -148,11 +150,11 @@ export function AdminGalleryFormPage() {
         <Link href="/admin/gallery">
           <a className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-slate-900 mb-6">
             <ArrowLeft size={16} />
-            Volver a galería
+            {t("admin.backToGallery")}
           </a>
         </Link>
         <h1 className="text-xl sm:text-2xl font-bold text-slate-900 mb-6">
-          {isNew ? "Nueva obra" : "Editar obra"}
+          {isNew ? t("admin.newWorkTitle") : t("admin.editWork")}
         </h1>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -160,10 +162,10 @@ export function AdminGalleryFormPage() {
             <>
               <div>
                 <Label className="text-slate-700">
-                  Imágenes (máx. {MAX_IMAGES_PER_BATCH} por lote)
+                  {t("admin.imagesLabel", { max: MAX_IMAGES_PER_BATCH })}
                 </Label>
                 <p className="text-sm text-slate-500 mt-0.5 mb-2">
-                  Subí hasta 6 imágenes. El layout lo decide el componente.
+                  {t("admin.imagesHint")}
                 </p>
                 <input
                   type="file"
@@ -182,14 +184,14 @@ export function AdminGalleryFormPage() {
                       >
                         <img
                           src={item.url}
-                          alt={`Previsualización ${i + 1}`}
+                          alt={`${i + 1}`}
                           className="w-full h-full object-cover"
                         />
                         <button
                           type="button"
                           onClick={() => removeImage(i)}
                           className="absolute top-1 right-1 p-1 rounded-full bg-black/60 hover:bg-black/80 text-white"
-                          aria-label="Quitar imagen"
+                          aria-label={t("admin.removeImage")}
                         >
                           <X size={14} />
                         </button>
@@ -200,7 +202,7 @@ export function AdminGalleryFormPage() {
               </div>
               <div>
                 <Label htmlFor="category" className="text-slate-700">
-                  Categoría
+                  {t("admin.category")}
                 </Label>
                 <Select value={category} onValueChange={setCategory} required>
                   <SelectTrigger className="mt-1 h-12 bg-white border-slate-300 text-slate-900">
@@ -217,8 +219,7 @@ export function AdminGalleryFormPage() {
                 </Select>
                 {category && (
                   <p className="text-sm text-slate-500 mt-1">
-                    Podés añadir hasta {remainingInCategory} imágenes más en
-                    &quot;{category}&quot;
+                    {t("admin.categoryRemaining", { remaining: remainingInCategory, category })}
                   </p>
                 )}
               </div>
@@ -226,7 +227,7 @@ export function AdminGalleryFormPage() {
           ) : (
             <>
               <MediaUploadField
-                label="Imagen"
+                label={t("admin.image")}
                 type="image"
                 folder="gallery"
                 value={singleImageUrl}
@@ -234,7 +235,7 @@ export function AdminGalleryFormPage() {
               />
               <div>
                 <Label htmlFor="category" className="text-slate-700">
-                  Categoría
+                  {t("admin.category")}
                 </Label>
                 <Select value={category} onValueChange={setCategory} required>
                   <SelectTrigger className="mt-1 h-12 bg-white border-slate-300 text-slate-900">
@@ -254,7 +255,7 @@ export function AdminGalleryFormPage() {
 
           <div className="flex flex-col-reverse sm:flex-row gap-2 sm:justify-end pt-4">
             <Button type="submit" disabled={isMutating || isUploading}>
-              {isUploading ? "Subiendo imágenes..." : isMutating ? "Guardando..." : "Guardar"}
+              {isUploading ? t("admin.uploadingImages") : isMutating ? t("admin.saving") : t("admin.save")}
             </Button>
           </div>
         </form>

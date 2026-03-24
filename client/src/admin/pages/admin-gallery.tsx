@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link } from "wouter";
+import { useTranslation } from "react-i18next";
 import { AdminLayout } from "../components/admin-layout";
 import { useAdminGallery } from "../hooks/use-admin-gallery";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,7 @@ interface GalleryWorkRow {
 }
 
 export function AdminGalleryPage() {
+  const { t } = useTranslation();
   const { works, isLoading, remove, isMutating } = useAdminGallery();
   const [workToDelete, setWorkToDelete] = useState<GalleryWorkRow | null>(null);
 
@@ -47,13 +49,13 @@ export function AdminGalleryPage() {
       <div className="max-w-6xl mx-auto pt-6 w-full">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6 lg:mb-8">
         <h1 className="text-xl sm:text-2xl font-bold text-slate-900">
-          Galería
+          {t("admin.galleryTitle")}
         </h1>
         <Link href="/admin/gallery/new">
           <a>
             <Button className="w-full sm:w-auto">
               <Plus size={18} className="mr-2" />
-              Nueva obra
+              {t("admin.newWork")}
             </Button>
           </a>
         </Link>
@@ -94,19 +96,19 @@ export function AdminGalleryPage() {
       <AlertDialog open={!!workToDelete} onOpenChange={(open) => !open && setWorkToDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>¿Eliminar obra?</AlertDialogTitle>
+            <AlertDialogTitle>{t("admin.deleteWork")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Vas a eliminar esta obra de la galería. Esta acción no se puede deshacer.
+              {t("admin.deleteWorkDesc")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel>{t("admin.cancel")}</AlertDialogCancel>
             <Button
               variant="destructive"
               onClick={() => void handleConfirmDelete()}
               disabled={isMutating}
             >
-              Eliminar
+              {t("admin.delete")}
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -114,10 +116,10 @@ export function AdminGalleryPage() {
 
       {(works as unknown as GalleryWorkRow[]).length === 0 && (
         <div className="text-center py-12 text-slate-500">
-          <p className="mb-4">No hay obras en la galería</p>
+          <p className="mb-4">{t("admin.noWorks")}</p>
           <Link href="/admin/gallery/new">
             <a className="text-slate-900 font-medium underline">
-              Añadir primera obra
+              {t("admin.addFirstWork")}
             </a>
           </Link>
         </div>

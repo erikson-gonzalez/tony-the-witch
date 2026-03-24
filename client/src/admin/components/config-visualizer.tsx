@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Smartphone, Monitor } from "lucide-react";
 
 export type HeroPreviewData = {
@@ -37,6 +38,7 @@ const DESKTOP_VIEWPORT_HEIGHT = 600;
 const HERO_HEIGHT_RATIO = 1.1; // 110vh
 
 export function ConfigVisualizer({ variant, data, className = "" }: ConfigVisualizerProps) {
+  const { t } = useTranslation();
   const [viewport, setViewport] = useState<ViewportMode>("desktop");
 
   const heroHeightMobile = MOBILE_VIEWPORT_HEIGHT;
@@ -47,7 +49,7 @@ export function ConfigVisualizer({ variant, data, className = "" }: ConfigVisual
   return (
     <div className={`rounded-xl border border-slate-200 bg-slate-50 overflow-hidden ${className}`}>
       <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-white">
-        <span className="text-sm font-medium text-slate-700">Vista previa</span>
+        <span className="text-sm font-medium text-slate-700">{t("admin.preview")}</span>
         <div className="flex gap-1">
           <button
             type="button"

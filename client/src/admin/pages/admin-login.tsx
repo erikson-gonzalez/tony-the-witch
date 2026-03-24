@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
+import { useTranslation } from "react-i18next";
 import { useAdminAuth } from "../context/admin-auth-context";
 
 export function AdminLoginPage() {
+  const { t } = useTranslation();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -21,7 +23,7 @@ export function AdminLoginPage() {
     if (result.success) {
       setLocation("/admin");
     } else {
-      setError(result.message ?? "Credenciales inválidas");
+      setError(result.message ?? t("admin.invalidCredentials"));
     }
 
     setIsSubmitting(false);
@@ -32,10 +34,10 @@ export function AdminLoginPage() {
       <div className="w-full max-w-sm">
         <div className="bg-white rounded-xl shadow-lg border border-slate-200 p-8">
           <h1 className="text-2xl font-bold text-slate-900 mb-2 text-center">
-            TTW Admin
+            {t("admin.loginTitle")}
           </h1>
           <p className="text-slate-500 text-sm text-center mb-8">
-            Inicia sesión para continuar
+            {t("admin.loginSubtitle")}
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -50,7 +52,7 @@ export function AdminLoginPage() {
                 htmlFor="username"
                 className="block text-sm font-medium text-slate-700 mb-2"
               >
-                Usuario
+                {t("admin.username")}
               </label>
               <input
                 id="username"
@@ -69,7 +71,7 @@ export function AdminLoginPage() {
                 htmlFor="password"
                 className="block text-sm font-medium text-slate-700 mb-2"
               >
-                Contraseña
+                {t("admin.password")}
               </label>
               <input
                 id="password"
@@ -88,7 +90,7 @@ export function AdminLoginPage() {
               disabled={isSubmitting}
               className="w-full py-3 px-4 rounded-lg bg-slate-900 text-white font-medium hover:bg-slate-800 focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              {isSubmitting ? "Entrando..." : "Entrar"}
+              {isSubmitting ? t("admin.loggingIn") : t("admin.loginButton")}
             </button>
           </form>
         </div>
@@ -97,7 +99,7 @@ export function AdminLoginPage() {
           href="/"
           className="block text-center text-sm text-slate-500 hover:text-slate-700 mt-6"
         >
-          ← Volver al sitio
+          ← {t("admin.backToSite")}
         </a>
       </div>
     </div>

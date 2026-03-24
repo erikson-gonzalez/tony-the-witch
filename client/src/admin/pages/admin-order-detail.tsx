@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useParams } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { AdminLayout } from "../components/admin-layout";
 import { adminApi, type AdminOrder } from "@/api/admin";
 import { Button } from "@/components/ui/button";
@@ -16,13 +17,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { ArrowLeft, Check, X, ExternalLink } from "lucide-react";
 
-const STATUS_LABELS: Record<string, { label: string; className: string }> = {
-  pending: { label: "Pendiente", className: "bg-yellow-100 text-yellow-800" },
-  proof_submitted: { label: "Comprobante enviado", className: "bg-blue-100 text-blue-800" },
-  approved: { label: "Aprobado", className: "bg-green-100 text-green-800" },
-  rejected: { label: "Rechazado", className: "bg-red-100 text-red-800" },
-};
-
 function formatUsd(cents: number): string {
   return `$${(cents / 100).toFixed(2)}`;
 }
@@ -32,6 +26,7 @@ function formatCrc(colones: number): string {
 }
 
 export function AdminOrderDetailPage() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const orderId = parseInt(id ?? "", 10);
   const { toast } = useToast();
@@ -40,6 +35,13 @@ export function AdminOrderDetailPage() {
   const [rejectOpen, setRejectOpen] = useState(false);
   const [adminNote, setAdminNote] = useState("");
   const [rejectReason, setRejectReason] = useState("");
+
+  const STATUS_LABELS: Record<string, { label: string; className: string }> = {
+    pending: { label: t("admin.statusPending"), className: "bg-yellow-100 text-yellow-800" },
+    proof_submitted: { label: t("admin.statusProofSubmitted"), className: "bg-blue-100 text-blue-800" },
+    approved: { label: t("admin.statusApproved"), className: "bg-green-100 text-green-800" },
+    rejected: { label: t("admin.statusRejected"), className: "bg-red-100 text-red-800" },
+  };
 
   const { data: order, isLoading } = useQuery({
     queryKey: ["admin", "orders", orderId],
@@ -51,7 +53,7 @@ export function AdminOrderDetailPage() {
     mutationFn: () => adminApi.orders.approve(orderId, adminNote || undefined),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "orders"] });
-      toast({ title: "Pedido aprobado" });
+      toast({ title: t("admin.orderApproved") });
       setApproveOpen(false);
       setAdminNote("");
     },
@@ -61,7 +63,7 @@ export function AdminOrderDetailPage() {
     mutationFn: () => adminApi.orders.reject(orderId, rejectReason),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "orders"] });
-      toast({ title: "Pedido rechazado" });
+      toast({ title: t("admin.orderRejected") });
       setRejectOpen(false);
       setRejectReason("");
     },
@@ -90,7 +92,7 @@ export function AdminOrderDetailPage() {
         <Link href="/admin/orders">
           <a className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700 mb-4">
             <ArrowLeft size={16} />
-            Pedidos
+            {t("admin.orderDetailBack")}
           </a>
         </Link>
 
@@ -113,13 +115,13 @@ export function AdminOrderDetailPage() {
                 : "bg-blue-100 text-blue-800"
             }`}
           >
-            {order.paymentMethod === "sinpe" ? "SINPE" : "Tarjeta"}
+            {order.paymentMethod === "sinpe" ? "SINPE" : t("admin.paymentCard")}
           </span>
         </div>
 
         <div className="space-y-6">
           {/* Customer info */}
-          <Section title="Cliente">
+          <Section title={t("admin.sectionClient")}>
             <p className="font-medium text-slate-900">{order.customerName}</p>
             <p>
               <a
@@ -147,25 +149,25 @@ export function AdminOrderDetailPage() {
           </Section>
 
           {/* Items */}
-          <Section title="Artículos">
+          <Section title={t("admin.sectionItems")}>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-slate-200">
                     <th className="text-left py-2 pr-4 font-medium text-slate-600">
-                      Producto
+                      {t("admin.itemProduct")}
                     </th>
                     <th className="text-left py-2 px-4 font-medium text-slate-600">
-                      Variante
+                      {t("admin.itemVariant")}
                     </th>
                     <th className="text-right py-2 px-4 font-medium text-slate-600">
-                      Cant.
+                      {t("admin.itemQty")}
                     </th>
                     <th className="text-right py-2 px-4 font-medium text-slate-600">
-                      Precio
+                      {t("admin.itemPrice")}
                     </th>
                     <th className="text-right py-2 pl-4 font-medium text-slate-600">
-                      Total
+                      {t("admin.itemTotal")}
                     </th>
                   </tr>
                 </thead>
@@ -193,21 +195,21 @@ export function AdminOrderDetailPage() {
             </div>
             <div className="mt-3 pt-3 border-t border-slate-200 space-y-1 text-sm text-right">
               <p>
-                <span className="text-slate-500">Subtotal:</span>{" "}
+                <span className="text-slate-500">{t("admin.subtotal")}:</span>{" "}
                 <span className="text-slate-900">
                   {formatUsd(order.subtotalUsd)}
                 </span>
               </p>
               {order.shippingCrc > 0 && (
                 <p>
-                  <span className="text-slate-500">Envío:</span>{" "}
+                  <span className="text-slate-500">{t("admin.shippingLabel")}:</span>{" "}
                   <span className="text-slate-900">
                     {formatCrc(order.shippingCrc)}
                   </span>
                 </p>
               )}
               <p className="font-medium text-base">
-                <span className="text-slate-500">Total:</span>{" "}
+                <span className="text-slate-500">{t("admin.tableTotal")}:</span>{" "}
                 <span className="text-slate-900">
                   {formatUsd(order.totalUsd)} / {formatCrc(order.totalCrc)}
                 </span>
@@ -217,7 +219,7 @@ export function AdminOrderDetailPage() {
 
           {/* Shipping */}
           {order.shippingAddress && (
-            <Section title="Envío">
+            <Section title={t("admin.sectionShipping")}>
               <p className="text-slate-900">
                 {order.shippingAddress.provincia},{" "}
                 {order.shippingAddress.canton},{" "}
@@ -239,7 +241,7 @@ export function AdminOrderDetailPage() {
 
           {/* Proof (SINPE only) */}
           {order.paymentMethod === "sinpe" && (
-            <Section title="Comprobante SINPE">
+            <Section title={t("admin.sectionSinpeProof")}>
               {order.proofImageUrl ? (
                 <div>
                   <a
@@ -250,22 +252,22 @@ export function AdminOrderDetailPage() {
                   >
                     <img
                       src={order.proofImageUrl}
-                      alt="Comprobante SINPE"
+                      alt={t("admin.sectionSinpeProof")}
                       className="max-w-xs rounded-lg border border-slate-200 hover:opacity-90 transition-opacity"
                     />
                     <span className="inline-flex items-center gap-1 mt-2 text-sm text-blue-600 hover:underline">
-                      Ver tamaño completo <ExternalLink size={14} />
+                      {t("admin.viewFullSize")} <ExternalLink size={14} />
                     </span>
                   </a>
                   {order.sinpeTransactionRef && (
                     <p className="mt-2 text-sm text-slate-600">
-                      Referencia: {order.sinpeTransactionRef}
+                      {t("admin.sinpeReference")}: {order.sinpeTransactionRef}
                     </p>
                   )}
                 </div>
               ) : (
                 <p className="text-slate-500 italic">
-                  El cliente no ha enviado comprobante aún
+                  {t("admin.noProofYet")}
                 </p>
               )}
             </Section>
@@ -273,11 +275,11 @@ export function AdminOrderDetailPage() {
 
           {/* Admin note (if already reviewed) */}
           {order.adminNote && (
-            <Section title="Nota del administrador">
+            <Section title={t("admin.sectionAdminNote")}>
               <p className="text-slate-700">{order.adminNote}</p>
               {reviewedDate && (
                 <p className="text-xs text-slate-400 mt-1">
-                  Revisado: {reviewedDate}
+                  {t("admin.reviewedAt")}: {reviewedDate}
                 </p>
               )}
             </Section>
@@ -291,7 +293,7 @@ export function AdminOrderDetailPage() {
                 className="bg-green-600 hover:bg-green-700 text-white"
               >
                 <Check size={18} className="mr-2" />
-                Aprobar
+                {t("admin.approve")}
               </Button>
               <Button
                 variant="outline"
@@ -299,13 +301,13 @@ export function AdminOrderDetailPage() {
                 className="border-red-300 text-red-600 hover:bg-red-50"
               >
                 <X size={18} className="mr-2" />
-                Rechazar
+                {t("admin.reject")}
               </Button>
             </div>
           )}
 
           <p className="text-xs text-slate-400">
-            Creado: {createdDate}
+            {t("admin.created")}: {createdDate}
           </p>
         </div>
       </div>
@@ -315,26 +317,26 @@ export function AdminOrderDetailPage() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              ¿Aprobar pedido {order.orderNumber}?
+              {t("admin.approveTitle", { orderNumber: order.orderNumber })}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              El cliente recibirá un email confirmando que su pago fue aceptado.
+              {t("admin.approveDesc")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <textarea
             value={adminNote}
             onChange={(e) => setAdminNote(e.target.value)}
-            placeholder="Nota para el cliente (opcional)"
+            placeholder={t("admin.approveNotePlaceholder")}
             className="w-full border border-slate-200 rounded-lg p-3 text-sm resize-none h-20 focus:outline-none focus:ring-2 focus:ring-slate-400"
           />
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel>{t("admin.cancel")}</AlertDialogCancel>
             <Button
               onClick={() => approveMutation.mutate()}
               disabled={approveMutation.isPending}
               className="bg-green-600 hover:bg-green-700"
             >
-              {approveMutation.isPending ? "Aprobando..." : "Aprobar"}
+              {approveMutation.isPending ? t("admin.approving") : t("admin.approve")}
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -345,27 +347,26 @@ export function AdminOrderDetailPage() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              ¿Rechazar pedido {order.orderNumber}?
+              {t("admin.rejectTitle", { orderNumber: order.orderNumber })}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              El cliente recibirá un email con el motivo del rechazo y podrá
-              subir un nuevo comprobante.
+              {t("admin.rejectDesc")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <textarea
             value={rejectReason}
             onChange={(e) => setRejectReason(e.target.value)}
-            placeholder="Motivo del rechazo (requerido)"
+            placeholder={t("admin.rejectReasonPlaceholder")}
             className="w-full border border-slate-200 rounded-lg p-3 text-sm resize-none h-24 focus:outline-none focus:ring-2 focus:ring-slate-400"
           />
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel>{t("admin.cancel")}</AlertDialogCancel>
             <Button
               variant="destructive"
               onClick={() => rejectMutation.mutate()}
               disabled={rejectMutation.isPending || rejectReason.length < 10}
             >
-              {rejectMutation.isPending ? "Rechazando..." : "Rechazar"}
+              {rejectMutation.isPending ? t("admin.rejecting") : t("admin.reject")}
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
