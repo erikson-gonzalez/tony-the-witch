@@ -18,6 +18,8 @@ import {
   type PaymentStatus,
   auditLogs,
   type AuditLog,
+  eclipticDebtConfig,
+  eclipticPayments,
 } from "../shared/schema";
 import { DEFAULT_SITE_CONFIG } from "../shared/defaults";
 import { getAvailableStock, adjustStock } from "../shared/stock";
@@ -575,4 +577,159 @@ export async function listAuditLogs(filters?: {
     .offset(offset);
 
   return { logs, total };
+}
+
+// =============================================================================
+// ANALYTICS
+// =============================================================================
+
+export async function getAnalytics(periodDays?: number) {
+  let dateCond = sql`true`;
+  if (periodDays) {
+    const since = new Date();
+    since.setDate(since.getDate() - periodDays);
+    dateCond = sql`${orders.createdAt} >= ${since}`;
+  }
+
+  const [revenueRow] = await db
+    .select({
+      totalRevenue: sql<number>`coalesce(sum(${orders.totalUsd}), 0)`,
+      totalOrders: sql<number>`count(*)`,
+      avgOrderValue: sql<number>`coalesce(avg(${orders.totalUsd}), 0)`,
+    })
+    .from(orders)
+    .where(sql`${orders.paymentStatus} = 'approved' AND ${dateCond}`);
+
+  const [allOrdersRow] = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(orders)
+    .where(dateCond);
+
+  const statusRows = await db
+    .select({
+      status: orders.paymentStatus,
+      count: sql<number>`count(*)`,
+    })
+    .from(orders)
+    .where(dateCond)
+    .groupBy(orders.paymentStatus);
+
+  const methodRows = await db
+    .select({
+      method: orders.paymentMethod,
+      count: sql<number>`count(*)`,
+    })
+    .from(orders)
+    .where(dateCond)
+    .groupBy(orders.paymentMethod);
+
+  return {
+    totalRevenue: Number(revenueRow?.totalRevenue ?? 0),
+    totalOrders: Number(allOrdersRow?.count ?? 0),
+    avgOrderValue: Math.round(Number(revenueRow?.avgOrderValue ?? 0)),
+    ordersByStatus: statusRows.reduce(
+      (acc, r) => ({ ...acc, [r.status]: Number(r.count) }),
+      {} as Record<string, number>,
+    ),
+    ordersByPaymentMethod: methodRows.reduce(
+      (acc, r) => ({ ...acc, [r.method]: Number(r.count) }),
+      {} as Record<string, number>,
+    ),
+  };
+}
+
+export async function getTopProducts(limit: number) {
+  const approvedOrders = await db
+    .select({ items: orders.items })
+    .from(orders)
+    .where(sql`${orders.paymentStatus} = 'approved'`);
+
+  const productMap = new Map<
+    number,
+    { productId: number; name: string; unitsSold: number; revenue: number }
+  >();
+
+  for (const order of approvedOrders) {
+    const items = order.items as Array<{
+      productId: number;
+      name: string;
+      priceUsd: number;
+      quantity: number;
+    }>;
+    for (const item of items) {
+      const existing = productMap.get(item.productId);
+      if (existing) {
+        existing.unitsSold += item.quantity;
+        existing.revenue += item.priceUsd * item.quantity;
+      } else {
+        productMap.set(item.productId, {
+          productId: item.productId,
+          name: item.name,
+          unitsSold: item.quantity,
+          revenue: item.priceUsd * item.quantity,
+        });
+      }
+    }
+  }
+
+  return Array.from(productMap.values())
+    .sort((a, b) => b.revenue - a.revenue)
+    .slice(0, limit);
+}
+
+// =============================================================================
+// ECLIPTIC DEBT
+// =============================================================================
+
+export async function getEclipticDebtStatus() {
+  const [config] = await db.select().from(eclipticDebtConfig).limit(1);
+  const [paymentsSum] = await db
+    .select({ total: sql<number>`coalesce(sum(${eclipticPayments.amount}), 0)` })
+    .from(eclipticPayments);
+
+  const paymentsList = await db
+    .select()
+    .from(eclipticPayments)
+    .orderBy(desc(eclipticPayments.paidAt));
+
+  const totalDebt = config?.totalDebt ?? 0;
+  const totalPaid = Number(paymentsSum?.total ?? 0);
+
+  return {
+    totalDebt,
+    totalPaid,
+    remaining: totalDebt - totalPaid,
+    notes: config?.notes ?? null,
+    payments: paymentsList,
+  };
+}
+
+export async function updateEclipticDebtConfig(totalDebt: number, notes?: string) {
+  const [existing] = await db.select().from(eclipticDebtConfig).limit(1);
+  if (existing) {
+    const [row] = await db
+      .update(eclipticDebtConfig)
+      .set({ totalDebt, notes: notes ?? null, updatedAt: new Date() })
+      .where(eq(eclipticDebtConfig.id, existing.id))
+      .returning();
+    return row!;
+  }
+  const [row] = await db
+    .insert(eclipticDebtConfig)
+    .values({ totalDebt, notes: notes ?? null })
+    .returning();
+  return row!;
+}
+
+export async function addEclipticPayment(amount: number, description: string, paidAt: Date) {
+  const [payment] = await db
+    .insert(eclipticPayments)
+    .values({ amount, description, paidAt })
+    .returning();
+  return payment!;
+}
+
+export async function deleteEclipticPayment(id: number): Promise<boolean> {
+  const result = await db.delete(eclipticPayments).where(eq(eclipticPayments.id, id));
+  return (result.rowCount ?? 0) > 0;
 }

@@ -25,6 +25,7 @@ const AdminProductsPage = lazy(() => import("@/admin/pages/admin-products").then
 const AdminProductFormPage = lazy(() => import("@/admin/pages/admin-product-form-page").then(m => ({ default: m.AdminProductFormPage })));
 const AdminOrdersPage = lazy(() => import("@/admin/pages/admin-orders").then(m => ({ default: m.AdminOrdersPage })));
 const AdminOrderDetailPage = lazy(() => import("@/admin/pages/admin-order-detail").then(m => ({ default: m.AdminOrderDetailPage })));
+const AdminBillingPage = lazy(() => import("@/admin/pages/admin-billing").then(m => ({ default: m.AdminBillingPage })));
 
 function AdminSuspense({ children }: { children: React.ReactNode }) {
   return (
@@ -78,6 +79,7 @@ function Router() {
         <Route path="/admin/config" component={AdminWrapper} />
         <Route path="/admin/nav-cards" component={AdminWrapper} />
         <Route path="/admin/orders" component={AdminWrapper} />
+        <Route path="/admin/billing" component={AdminWrapper} />
         <Route path="/admin/gallery" component={AdminWrapper} />
         <Route path="/admin/products" component={AdminWrapper} />
         <Route path="/admin" component={AdminWrapper} />
@@ -102,6 +104,7 @@ function AdminWrapper() {
     "/admin/gallery": AdminGalleryPage,
     "/admin/products": AdminProductsPage,
     "/admin/orders": AdminOrdersPage,
+    "/admin/billing": AdminBillingPage,
   };
   const Component = routeMap[path] ?? AdminDashboardPage;
 

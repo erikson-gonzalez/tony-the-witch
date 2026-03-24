@@ -14,6 +14,7 @@ import {
   Menu,
   X,
   Package,
+  BarChart3,
 } from "lucide-react";
 
 interface AdminLayoutProps {
@@ -33,6 +34,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     { href: "/admin/nav-cards", label: t("admin.navCards"), icon: LayoutGrid },
     { href: "/admin/gallery", label: t("admin.gallery"), icon: Image },
     { href: "/admin/products", label: t("admin.products"), icon: ShoppingBag },
+    { href: "/admin/billing", label: t("admin.billing", { defaultValue: "Facturación" }), icon: BarChart3 },
   ] as const;
 
   const isActive = (href: string) => {

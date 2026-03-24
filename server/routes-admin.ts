@@ -37,6 +37,12 @@ import {
   getPendingOrderCount,
   logAdminAction,
   listAuditLogs,
+  getAnalytics,
+  getTopProducts,
+  getEclipticDebtStatus,
+  updateEclipticDebtConfig,
+  addEclipticPayment,
+  deleteEclipticPayment,
 } from "./storage-admin";
 import { requireAdmin } from "./auth";
 import {
@@ -575,6 +581,92 @@ export function registerAdminRoutes(app: Express) {
       res.json({ logs: result.logs, total: result.total });
     } catch (err) {
       console.error("GET /api/admin/audit-logs:", err);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Billing & Analytics
+  protectedRouter.get("/api/admin/billing/analytics", ...auth, async (req, res) => {
+    try {
+      const days = req.query.days ? parseInt(req.query.days as string, 10) : undefined;
+      const data = await getAnalytics(days && !isNaN(days) ? days : undefined);
+      res.json(data);
+    } catch (err) {
+      console.error("GET /api/admin/billing/analytics:", err);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  protectedRouter.get("/api/admin/billing/top-products", ...auth, async (req, res) => {
+    try {
+      const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 10;
+      const data = await getTopProducts(isNaN(limit) ? 10 : limit);
+      res.json(data);
+    } catch (err) {
+      console.error("GET /api/admin/billing/top-products:", err);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  protectedRouter.get("/api/admin/billing/ecliptic", ...auth, async (_req, res) => {
+    try {
+      const data = await getEclipticDebtStatus();
+      res.json(data);
+    } catch (err) {
+      console.error("GET /api/admin/billing/ecliptic:", err);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  protectedRouter.put("/api/admin/billing/ecliptic/config", ...auth, async (req, res) => {
+    try {
+      const schema = z.object({
+        totalDebt: z.number().int().min(0),
+        notes: z.string().max(2000).optional(),
+      });
+      const input = schema.parse(req.body);
+      const data = await updateEclipticDebtConfig(input.totalDebt, input.notes);
+      const userId = (req.user as Express.User).id;
+      logAdminAction(userId, "ecliptic.config-update", "ecliptic").catch(() => {});
+      res.json(data);
+    } catch (err) {
+      if (handleZodError(err, res)) return;
+      console.error("PUT /api/admin/billing/ecliptic/config:", err);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  protectedRouter.post("/api/admin/billing/ecliptic/payments", ...auth, async (req, res) => {
+    try {
+      const schema = z.object({
+        amount: z.number().int().min(1),
+        description: z.string().min(1).max(500),
+        paidAt: z.string().transform((s) => new Date(s)),
+      });
+      const input = schema.parse(req.body);
+      const data = await addEclipticPayment(input.amount, input.description, input.paidAt);
+      const userId = (req.user as Express.User).id;
+      logAdminAction(userId, "ecliptic.payment-add", "ecliptic", data.id).catch(() => {});
+      res.status(201).json(data);
+    } catch (err) {
+      if (handleZodError(err, res)) return;
+      console.error("POST /api/admin/billing/ecliptic/payments:", err);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  protectedRouter.delete("/api/admin/billing/ecliptic/payments/:id", ...auth, async (req, res) => {
+    try {
+      const idParam = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+      const id = parseInt(idParam ?? "", 10);
+      if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
+      const deleted = await deleteEclipticPayment(id);
+      if (!deleted) return res.status(404).json({ message: "Not found" });
+      const userId = (req.user as Express.User).id;
+      logAdminAction(userId, "ecliptic.payment-delete", "ecliptic", id).catch(() => {});
+      res.status(204).send();
+    } catch (err) {
+      console.error("DELETE /api/admin/billing/ecliptic/payments/:id:", err);
       res.status(500).json({ message: "Internal server error" });
     }
   });

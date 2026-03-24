@@ -94,6 +94,24 @@ export const adminApi = {
       adminMutation("DELETE", `${BASE}/products/${id}`),
   },
 
+  billing: {
+    analytics: (days?: number) => {
+      const qs = days ? `?days=${days}` : "";
+      return adminFetch<BillingAnalytics>(`${BASE}/billing/analytics${qs}`);
+    },
+    topProducts: (limit?: number) => {
+      const qs = limit ? `?limit=${limit}` : "";
+      return adminFetch<TopProduct[]>(`${BASE}/billing/top-products${qs}`);
+    },
+    ecliptic: () => adminFetch<EclipticDebtStatus>(`${BASE}/billing/ecliptic`),
+    updateEclipticConfig: (data: { totalDebt: number; notes?: string }) =>
+      adminMutation("PUT", `${BASE}/billing/ecliptic/config`, data),
+    addPayment: (data: { amount: number; description: string; paidAt: string }) =>
+      adminMutation("POST", `${BASE}/billing/ecliptic/payments`, data),
+    deletePayment: (id: number) =>
+      adminMutation("DELETE", `${BASE}/billing/ecliptic/payments/${id}`),
+  },
+
   orders: {
     list: (params?: { status?: string; page?: number }) => {
       const qs = new URLSearchParams();
@@ -116,6 +134,37 @@ export const adminApi = {
       adminFetch<{ count: number }>(`${BASE}/orders/pending-count`),
   },
 };
+
+export interface BillingAnalytics {
+  totalRevenue: number;
+  totalOrders: number;
+  avgOrderValue: number;
+  ordersByStatus: Record<string, number>;
+  ordersByPaymentMethod: Record<string, number>;
+}
+
+export interface TopProduct {
+  productId: number;
+  name: string;
+  unitsSold: number;
+  revenue: number;
+}
+
+export interface EclipticPayment {
+  id: number;
+  amount: number;
+  description: string;
+  paidAt: string;
+  createdAt: string;
+}
+
+export interface EclipticDebtStatus {
+  totalDebt: number;
+  totalPaid: number;
+  remaining: number;
+  notes: string | null;
+  payments: EclipticPayment[];
+}
 
 export interface AdminOrder {
   id: number;

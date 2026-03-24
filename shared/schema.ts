@@ -351,3 +351,22 @@ export const auditLogs = pgTable("audit_logs", {
 });
 
 export type AuditLog = typeof auditLogs.$inferSelect;
+
+// =============================================================================
+// ECLIPTIC DEBT (billing tracking)
+// =============================================================================
+
+export const eclipticDebtConfig = pgTable("ecliptic_debt_config", {
+  id: serial("id").primaryKey(),
+  totalDebt: integer("total_debt").notNull(), // cents USD
+  notes: text("notes"),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const eclipticPayments = pgTable("ecliptic_payments", {
+  id: serial("id").primaryKey(),
+  amount: integer("amount").notNull(), // cents USD
+  description: text("description").notNull(),
+  paidAt: timestamp("paid_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
