@@ -3,7 +3,6 @@ import { ParallaxHero } from "@/components/ParallaxHero";
 import { Footer } from "@/components/Footer";
 import { NavCardComponent } from "@/components/home/nav-card";
 import { ArtistSection } from "@/components/home/artist-section";
-import { BookingForm } from "@/components/BookingForm";
 import { useContent } from "@/hooks/use-content";
 import { motion } from "framer-motion";
 
@@ -46,7 +45,6 @@ export default function Home() {
 
         <div className="pt-16 md:pt-32" />
         <ArtistSection />
-        <BookingForm />
       </main>
 
       <Footer />
