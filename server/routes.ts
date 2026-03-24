@@ -23,6 +23,7 @@ import {
   getOrderById,
   getOrderByNumber,
   updateOrderProof,
+  StockError,
 } from "./storage-admin";
 import { uploadMedia } from "./cloudinary";
 
@@ -122,7 +123,7 @@ export async function registerRoutes(
               field: "items",
             });
           }
-          const expectedPrice = Math.round(product.price * 100);
+          const expectedPrice = Math.round(Number(product.price) * 100);
           if (item.priceUsd !== expectedPrice) {
             return res.status(400).json({
               message: `Precio incorrecto para "${item.name}"`,
@@ -170,6 +171,14 @@ export async function registerRoutes(
         return res.status(400).json({
           message: err.errors[0].message,
           field: err.errors[0].path.join("."),
+        });
+      }
+      if (err instanceof StockError) {
+        return res.status(409).json({
+          message: err.message,
+          field: "items",
+          productId: err.productId,
+          available: err.available,
         });
       }
       console.error("POST /api/orders:", err instanceof Error ? err.message : "Unknown error");

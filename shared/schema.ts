@@ -5,8 +5,9 @@ import {
   timestamp,
   boolean,
   integer,
-  real,
+  numeric,
   jsonb,
+  index,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -22,7 +23,7 @@ export const inquiries = pgTable("inquiries", {
   message: text("message").notNull(),
   tattooIdea: text("tattoo_idea"),
   placement: text("placement"),
-  isRead: boolean("is_read").default(false),
+  isRead: boolean("is_read").notNull().default(false),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -158,7 +159,9 @@ export const galleryWorks = pgTable("gallery_works", {
   category: text("category").notNull(),
   height: text("height").$type<"short" | "medium" | "tall">().default("medium"),
   sortOrder: integer("sort_order").default(0),
-});
+}, (table) => [
+  index("gallery_works_category_idx").on(table.category),
+]);
 
 export const galleryHeightSchema = z.enum(["short", "medium", "tall"]);
 export const insertGalleryWorkSchema = createInsertSchema(galleryWorks)
@@ -178,7 +181,7 @@ export const products = pgTable("products", {
   slug: text("slug").notNull().unique(),
   name: text("name").notNull(),
   category: text("category").notNull(),
-  price: real("price").notNull(),
+  price: numeric("price", { precision: 10, scale: 2 }).notNull(),
   description: text("description").notNull(),
   sizes: jsonb("sizes").$type<string[]>(),
   sizeStock: jsonb("size_stock").$type<Record<string, number>>(),
@@ -187,10 +190,20 @@ export const products = pgTable("products", {
   colorStock: jsonb("color_stock").$type<Record<string, number>>(),
   images: jsonb("images").$type<string[]>().notNull(),
   sortOrder: integer("sort_order").default(0),
-});
+}, (table) => [
+  index("products_category_idx").on(table.category),
+]);
 
 export const insertProductSchema = createInsertSchema(products).omit({
   id: true,
+}).extend({
+  price: z.coerce.number().positive("El precio debe ser mayor a 0"),
+  images: z.array(z.string().url()).min(1, "Al menos una imagen requerida"),
+  sizes: z.array(z.string().min(1)).optional().nullable(),
+  colors: z.array(z.string().min(1)).optional().nullable(),
+  sizeStock: z.record(z.string(), z.number().int().min(0)).optional().nullable(),
+  colorStock: z.record(z.string(), z.number().int().min(0)).optional().nullable(),
+  sizeColorStock: z.record(z.string(), z.record(z.string(), z.number().int().min(0))).optional().nullable(),
 });
 export const updateProductSchema = insertProductSchema.partial();
 
@@ -239,6 +252,9 @@ export interface ShippingAddress {
   pais?: string;
 }
 
+export const PAYMENT_STATUSES = ["pending", "proof_submitted", "approved", "rejected"] as const;
+export type PaymentStatus = (typeof PAYMENT_STATUSES)[number];
+
 export const orders = pgTable("orders", {
   id: serial("id").primaryKey(),
   orderNumber: text("order_number").notNull().unique(),
@@ -264,7 +280,7 @@ export const orders = pgTable("orders", {
 
   // Payment
   paymentMethod: text("payment_method").notNull(),
-  paymentStatus: text("payment_status").notNull().default("pending"),
+  paymentStatus: text("payment_status").notNull().default("pending").$type<PaymentStatus>(),
   proofImageUrl: text("proof_image_url"),
   sinpeTransactionRef: text("sinpe_transaction_ref"),
 
@@ -275,7 +291,11 @@ export const orders = pgTable("orders", {
   // Timestamps
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+}, (table) => [
+  index("orders_payment_status_idx").on(table.paymentStatus),
+  index("orders_customer_email_idx").on(table.customerEmail),
+  index("orders_created_at_idx").on(table.createdAt),
+]);
 
 export const insertOrderSchema = z.object({
   customerName: z.string().min(1).max(200),
@@ -310,6 +330,8 @@ export const insertOrderSchema = z.object({
   shippingMethod: z.enum(["STANDARD", "NEXT_DAY", "A_CONVENIR"]).optional(),
   paymentMethod: z.enum(["sinpe", "card"]),
 });
+
+export const paymentStatusSchema = z.enum(PAYMENT_STATUSES);
 
 export type Order = typeof orders.$inferSelect;
 export type InsertOrder = z.infer<typeof insertOrderSchema>;

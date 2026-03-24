@@ -13,6 +13,9 @@ import {
   type InsertProduct,
   type InsertOrder,
   type Order,
+  type Product,
+  type OrderItem,
+  type PaymentStatus,
 } from "../shared/schema";
 import { DEFAULT_SITE_CONFIG } from "../shared/defaults";
 
@@ -194,6 +197,7 @@ export async function createProduct(input: InsertProduct) {
   };
   const values = {
     ...input,
+    price: String(input.price),
     images: [...input.images] as string[],
     sizes: input.sizes ? ([...input.sizes] as string[]) : undefined,
     colors: input.colors ? ([...input.colors] as string[]) : undefined,
@@ -220,9 +224,10 @@ export async function updateProduct(id: number, input: Partial<InsertProduct>) {
     colorStock?: Record<string, number>;
     sizeColorStock?: Record<string, Record<string, number>>;
   };
-  const { images, sizes, colors, sizeStock, colorStock, sizeColorStock, ...rest } = inputTyped;
+  const { images, sizes, colors, sizeStock, colorStock, sizeColorStock, price, ...rest } = inputTyped as typeof inputTyped & { price?: number };
   const setValues = {
     ...rest,
+    ...(price !== undefined && { price: String(price) }),
     ...(images !== undefined && images !== null && { images: [...images] as string[] }),
     ...(sizes !== undefined && sizes !== null && Array.isArray(sizes) && { sizes: [...sizes] as string[] }),
     ...(colors !== undefined && colors !== null && Array.isArray(colors) && { colors: [...colors] as string[] }),
@@ -268,13 +273,134 @@ export async function createAdminUser(username: string, passwordHash: string) {
 // ORDERS
 // =============================================================================
 
+/**
+ * Ensure the order_number_seq sequence exists, seeded from current max order.
+ * Called once on first order creation; idempotent.
+ */
+let sequenceInitialized = false;
+
+async function ensureOrderSequence(): Promise<void> {
+  if (sequenceInitialized) return;
+  await db.execute(sql`
+    DO $$
+    BEGIN
+      IF NOT EXISTS (SELECT 1 FROM pg_class WHERE relname = 'order_number_seq') THEN
+        CREATE SEQUENCE order_number_seq;
+        PERFORM setval('order_number_seq',
+          COALESCE(
+            (SELECT MAX(CAST(REPLACE(order_number, 'TTW-', '') AS INT)) FROM orders),
+            0
+          )
+        );
+      END IF;
+    END
+    $$;
+  `);
+  sequenceInitialized = true;
+}
+
+/** Get next order number using a PostgreSQL sequence (atomic, no race conditions). */
 export async function getNextOrderNumber(): Promise<string> {
-  const [row] = await db
-    .select({ maxNum: max(orders.orderNumber) })
-    .from(orders);
-  if (!row?.maxNum) return "TTW-0001";
-  const num = parseInt(row.maxNum.replace("TTW-", ""), 10);
-  return `TTW-${String(num + 1).padStart(4, "0")}`;
+  await ensureOrderSequence();
+  const result = await db.execute(sql`SELECT nextval('order_number_seq') as num`);
+  const row = result.rows[0] as { num: string };
+  const num = Number(row.num);
+  return `TTW-${String(num).padStart(4, "0")}`;
+}
+
+/**
+ * Get available stock for a product variant.
+ * Returns null if stock is not tracked (unlimited).
+ */
+export function getAvailableStock(
+  product: Product,
+  size?: string,
+  color?: string,
+): number | null {
+  // Most specific: size+color combination
+  if (size && color && product.sizeColorStock) {
+    const sizeMap = product.sizeColorStock[size];
+    if (sizeMap && color in sizeMap) return sizeMap[color];
+  }
+  // Size-only stock
+  if (size && product.sizeStock) {
+    if (size in product.sizeStock) return product.sizeStock[size];
+  }
+  // Color-only stock
+  if (color && product.colorStock) {
+    if (color in product.colorStock) return product.colorStock[color];
+  }
+  // No stock tracking for this variant
+  return null;
+}
+
+/**
+ * Deduct stock for an order item. Mutates the product's stock fields in-place
+ * and returns the updated stock values to persist.
+ */
+function deductStock(
+  product: Product,
+  item: OrderItem,
+): Partial<Pick<Product, "sizeStock" | "colorStock" | "sizeColorStock">> {
+  const updates: Partial<Pick<Product, "sizeStock" | "colorStock" | "sizeColorStock">> = {};
+
+  if (item.size && item.color && product.sizeColorStock) {
+    const sizeMap = { ...product.sizeColorStock };
+    if (sizeMap[item.size]) {
+      sizeMap[item.size] = { ...sizeMap[item.size], [item.color]: (sizeMap[item.size][item.color] ?? 0) - item.quantity };
+      updates.sizeColorStock = sizeMap;
+    }
+  }
+  if (item.size && product.sizeStock) {
+    const stock = { ...product.sizeStock };
+    if (item.size in stock) {
+      stock[item.size] = (stock[item.size] ?? 0) - item.quantity;
+      updates.sizeStock = stock;
+    }
+  }
+  if (item.color && product.colorStock) {
+    const stock = { ...product.colorStock };
+    if (item.color in stock) {
+      stock[item.color] = (stock[item.color] ?? 0) - item.quantity;
+      updates.colorStock = stock;
+    }
+  }
+
+  return updates;
+}
+
+/**
+ * Restore stock when an order is rejected.
+ */
+function restoreStock(
+  product: Product,
+  item: OrderItem,
+): Partial<Pick<Product, "sizeStock" | "colorStock" | "sizeColorStock">> {
+  const updates: Partial<Pick<Product, "sizeStock" | "colorStock" | "sizeColorStock">> = {};
+
+  if (item.size && item.color && product.sizeColorStock) {
+    const sizeMap = { ...product.sizeColorStock };
+    if (sizeMap[item.size]) {
+      sizeMap[item.size] = { ...sizeMap[item.size], [item.color]: (sizeMap[item.size][item.color] ?? 0) + item.quantity };
+      updates.sizeColorStock = sizeMap;
+    }
+  }
+  if (item.size && product.sizeStock) {
+    const stock = { ...product.sizeStock };
+    if (item.size in stock) {
+      stock[item.size] = (stock[item.size] ?? 0) + item.quantity;
+      updates.sizeStock = stock;
+    }
+  }
+  if (item.color && product.colorStock) {
+    const stock = { ...product.colorStock };
+    if (item.color in stock) {
+      stock[item.color] = (stock[item.color] ?? 0) + item.quantity;
+      updates.colorStock = stock;
+    }
+  }
+
+  return updates;
 }
 
 export async function createOrder(
@@ -286,29 +412,75 @@ export async function createOrder(
     usdToCrcRate: number;
   },
 ): Promise<Order> {
-  const orderNumber = await getNextOrderNumber();
-  const [order] = await db
-    .insert(orders)
-    .values({
-      orderNumber,
-      customerName: input.customerName,
-      customerEmail: input.customerEmail,
-      customerPhone: input.customerPhone ?? null,
-      customerNote: input.customerNote ?? null,
-      items: input.items,
-      subtotalUsd: input.subtotalUsd,
-      shippingCrc: input.shippingCrc,
-      totalUsd: input.totalUsd,
-      totalCrc: input.totalCrc,
-      usdToCrcRate: input.usdToCrcRate,
-      shippingAddress: input.shippingAddress ?? null,
-      shippingZone: input.shippingZone ?? null,
-      shippingMethod: input.shippingMethod ?? null,
-      paymentMethod: input.paymentMethod,
-      paymentStatus: input.paymentMethod === "card" ? "approved" : "pending",
-    })
-    .returning();
-  return order!;
+  return await db.transaction(async (trx) => {
+    // 1. Validate and deduct stock for non-reservation items
+    for (const item of input.items) {
+      if (item.isReservation) continue;
+
+      const [product] = await trx
+        .select()
+        .from(products)
+        .where(eq(products.id, item.productId));
+      if (!product) throw new Error(`Producto no encontrado: "${item.name}"`);
+
+      const available = getAvailableStock(product, item.size, item.color);
+      if (available !== null && available < item.quantity) {
+        throw new StockError(
+          `Stock insuficiente para "${item.name}"`,
+          item.productId,
+          available,
+        );
+      }
+
+      // Deduct stock
+      const stockUpdates = deductStock(product, item);
+      if (Object.keys(stockUpdates).length > 0) {
+        await trx
+          .update(products)
+          .set(stockUpdates)
+          .where(eq(products.id, item.productId));
+      }
+    }
+
+    // 2. Generate order number (sequence is atomic, safe outside transaction)
+    const orderNumber = await getNextOrderNumber();
+
+    // 3. Insert order
+    const [order] = await trx
+      .insert(orders)
+      .values({
+        orderNumber,
+        customerName: input.customerName,
+        customerEmail: input.customerEmail,
+        customerPhone: input.customerPhone ?? null,
+        customerNote: input.customerNote ?? null,
+        items: input.items,
+        subtotalUsd: input.subtotalUsd,
+        shippingCrc: input.shippingCrc,
+        totalUsd: input.totalUsd,
+        totalCrc: input.totalCrc,
+        usdToCrcRate: input.usdToCrcRate,
+        shippingAddress: input.shippingAddress ?? null,
+        shippingZone: input.shippingZone ?? null,
+        shippingMethod: input.shippingMethod ?? null,
+        paymentMethod: input.paymentMethod,
+        paymentStatus: input.paymentMethod === "card" ? "approved" : "pending",
+      })
+      .returning();
+
+    return order!;
+  });
+}
+
+export class StockError extends Error {
+  constructor(
+    message: string,
+    public productId: number,
+    public available: number,
+  ) {
+    super(message);
+    this.name = "StockError";
+  }
 }
 
 export async function getOrderById(id: number): Promise<Order | null> {
@@ -348,10 +520,10 @@ export async function listOrders(filters?: {
       ) as typeof countQuery;
     } else {
       query = query.where(
-        eq(orders.paymentStatus, filters.status),
+        eq(orders.paymentStatus, filters.status as PaymentStatus),
       ) as typeof query;
       countQuery = countQuery.where(
-        eq(orders.paymentStatus, filters.status),
+        eq(orders.paymentStatus, filters.status as PaymentStatus),
       ) as typeof countQuery;
     }
   }
@@ -406,17 +578,41 @@ export async function rejectOrder(
   id: number,
   adminNote: string,
 ): Promise<Order | null> {
-  const [order] = await db
-    .update(orders)
-    .set({
-      paymentStatus: "rejected",
-      adminNote,
-      reviewedAt: new Date(),
-      updatedAt: new Date(),
-    })
-    .where(eq(orders.id, id))
-    .returning();
-  return order ?? null;
+  return await db.transaction(async (trx) => {
+    const [order] = await trx
+      .update(orders)
+      .set({
+        paymentStatus: "rejected",
+        adminNote,
+        reviewedAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .where(eq(orders.id, id))
+      .returning();
+
+    if (!order) return null;
+
+    // Restore stock for non-reservation items
+    for (const item of order.items) {
+      if (item.isReservation) continue;
+
+      const [product] = await trx
+        .select()
+        .from(products)
+        .where(eq(products.id, item.productId));
+      if (!product) continue;
+
+      const stockUpdates = restoreStock(product, item);
+      if (Object.keys(stockUpdates).length > 0) {
+        await trx
+          .update(products)
+          .set(stockUpdates)
+          .where(eq(products.id, item.productId));
+      }
+    }
+
+    return order;
+  });
 }
 
 export async function getPendingOrderCount(): Promise<number> {

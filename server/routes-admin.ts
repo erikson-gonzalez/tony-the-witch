@@ -94,7 +94,7 @@ export function registerPublicContentRoutes(app: Express) {
               slug: p.slug,
               name: p.name,
               category: p.category,
-              price: p.price,
+              price: Number(p.price),
               description: p.description,
               sizes: p.sizes ?? undefined,
               colors: p.colors ?? undefined,
@@ -393,7 +393,7 @@ export function registerAdminRoutes(app: Express) {
   protectedRouter.get(productsApi.list.path, ...auth, async (_req, res) => {
     try {
       const items = await listProducts();
-      res.json(items.map((p) => ({ ...p, sortOrder: p.sortOrder ?? 0 })));
+      res.json(items.map((p) => ({ ...p, price: Number(p.price), sortOrder: p.sortOrder ?? 0 })));
     } catch (err) {
       console.error("GET /api/admin/products:", err);
       res.status(500).json({ message: "Internal server error" });
@@ -404,7 +404,7 @@ export function registerAdminRoutes(app: Express) {
     try {
       const input = productsApi.create.input.parse(req.body);
       const product = await createProduct(input);
-      res.status(201).json({ ...product, sortOrder: product.sortOrder ?? 0 });
+      res.status(201).json({ ...product, price: Number(product.price), sortOrder: product.sortOrder ?? 0 });
     } catch (err) {
       if (handleZodError(err, res)) return;
       if (err instanceof Error && err.message.includes("already exists")) {
@@ -423,7 +423,7 @@ export function registerAdminRoutes(app: Express) {
       const input = productsApi.update.input.parse(req.body);
       const product = await updateProduct(id, input);
       if (!product) return res.status(404).json({ message: "Not found" });
-      res.json({ ...product, sortOrder: product.sortOrder ?? 0 });
+      res.json({ ...product, price: Number(product.price), sortOrder: product.sortOrder ?? 0 });
     } catch (err) {
       if (handleZodError(err, res)) return;
       if (err instanceof Error && err.message.includes("already exists")) {
