@@ -16,6 +16,8 @@ import {
   type Product,
   type OrderItem,
   type PaymentStatus,
+  auditLogs,
+  type AuditLog,
 } from "../shared/schema";
 import { DEFAULT_SITE_CONFIG } from "../shared/defaults";
 import { getAvailableStock, adjustStock } from "../shared/stock";
@@ -530,4 +532,47 @@ export async function getPendingOrderCount(): Promise<number> {
     .from(orders)
     .where(inArray(orders.paymentStatus, ["pending", "proof_submitted"]));
   return Number(row?.count ?? 0);
+}
+
+// =============================================================================
+// AUDIT LOGS
+// =============================================================================
+
+export async function logAdminAction(
+  userId: number,
+  action: string,
+  entityType: string,
+  entityId?: string | number,
+  details?: unknown,
+) {
+  await db.insert(auditLogs).values({
+    userId,
+    action,
+    entityType,
+    entityId: entityId != null ? String(entityId) : null,
+    details: details ?? null,
+  });
+}
+
+export async function listAuditLogs(filters?: {
+  page?: number;
+  limit?: number;
+}): Promise<{ logs: AuditLog[]; total: number }> {
+  const page = filters?.page ?? 1;
+  const limit = filters?.limit ?? 50;
+  const offset = (page - 1) * limit;
+
+  const [countRow] = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(auditLogs);
+  const total = Number(countRow?.count ?? 0);
+
+  const logs = await db
+    .select()
+    .from(auditLogs)
+    .orderBy(desc(auditLogs.createdAt))
+    .limit(limit)
+    .offset(offset);
+
+  return { logs, total };
 }

@@ -149,17 +149,18 @@ export function ProductFormContent({
   const [customSizes, setCustomSizes] = useState<Array<{ id: string; name: string }>>(() => {
     const fromSizes = initial?.sizes ?? [];
     const fromStock = initial?.sizeColorStock ? Object.keys(initial.sizeColorStock) : [];
-    const customNames = Array.from(new Set([
+    const combined = [
       ...fromSizes.filter((s) => !AVAILABLE_SIZES.includes(s as (typeof AVAILABLE_SIZES)[number])),
       ...fromStock.filter((s) => !AVAILABLE_SIZES.includes(s as (typeof AVAILABLE_SIZES)[number])),
-    ]));
+    ];
+    const customNames = combined.filter((v, i) => combined.indexOf(v) === i);
     return customNames.map((name) => ({ id: name, name }));
   });
 
   const addCustomSize = useCallback(() => {
     const id = `custom-${Date.now()}`;
     setCustomSizes((prev) => [...prev, { id, name: "" }]);
-    setSelectedSizes((prev) => new Set(prev).add(id));
+    setSelectedSizes((prev) => new Set(Array.from(prev)).add(id));
   }, []);
 
   const updateCustomSizeName = useCallback((id: string, name: string) => {
@@ -171,7 +172,7 @@ export function ProductFormContent({
   const removeCustomSize = useCallback((id: string) => {
     setCustomSizes((prev) => prev.filter((c) => c.id !== id));
     setSelectedSizes((prev) => {
-      const next = new Set(prev);
+      const next = new Set(Array.from(prev));
       next.delete(id);
       return next;
     });
@@ -192,7 +193,7 @@ export function ProductFormContent({
 
   const handleSizeToggle = useCallback((size: string, checked: boolean) => {
     setSelectedSizes((prev) => {
-      const next = new Set(prev);
+      const next = new Set(Array.from(prev));
       if (checked) next.add(size);
       else next.delete(size);
       return next;

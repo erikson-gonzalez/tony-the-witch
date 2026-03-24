@@ -35,6 +35,8 @@ import {
   approveOrder,
   rejectOrder,
   getPendingOrderCount,
+  logAdminAction,
+  listAuditLogs,
 } from "./storage-admin";
 import { requireAdmin } from "./auth";
 import {
@@ -260,6 +262,8 @@ export function registerAdminRoutes(app: Express) {
         return res.status(400).json({ message: mediaError });
       }
       const data = await updateSiteConfig(input);
+      const userId = (req.user as Express.User).id;
+      logAdminAction(userId, "config.update", "config").catch(() => {});
       res.json({ data });
     } catch (err) {
       if (handleZodError(err, res)) return;
@@ -283,6 +287,8 @@ export function registerAdminRoutes(app: Express) {
     try {
       const input = navCardsApi.create.input.parse(req.body);
       const card = await createNavCard(input);
+      const userId = (req.user as Express.User).id;
+      logAdminAction(userId, "nav-card.create", "nav-card", card.id).catch(() => {});
       res.status(201).json({ ...card, sortOrder: card.sortOrder ?? 0 });
     } catch (err) {
       if (handleZodError(err, res)) return;
@@ -299,6 +305,8 @@ export function registerAdminRoutes(app: Express) {
       const input = navCardsApi.update.input.parse(req.body);
       const card = await updateNavCard(id, input);
       if (!card) return res.status(404).json({ message: "Not found" });
+      const userId = (req.user as Express.User).id;
+      logAdminAction(userId, "nav-card.update", "nav-card", id).catch(() => {});
       res.json({ ...card, sortOrder: card.sortOrder ?? 0 });
     } catch (err) {
       if (handleZodError(err, res)) return;
@@ -314,6 +322,8 @@ export function registerAdminRoutes(app: Express) {
       if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
       const deleted = await deleteNavCard(id);
       if (!deleted) return res.status(404).json({ message: "Not found" });
+      const userId = (req.user as Express.User).id;
+      logAdminAction(userId, "nav-card.delete", "nav-card", id).catch(() => {});
       res.status(204).send();
     } catch (err) {
       console.error("DELETE /api/admin/nav-cards/:id:", err);
@@ -336,6 +346,8 @@ export function registerAdminRoutes(app: Express) {
     try {
       const input = galleryApi.create.input.parse(req.body);
       const work = await createGalleryWork(input);
+      const userId = (req.user as Express.User).id;
+      logAdminAction(userId, "gallery.create", "gallery", work.id).catch(() => {});
       res.status(201).json({ ...work, sortOrder: work.sortOrder ?? 0 });
     } catch (err) {
       if (handleZodError(err, res)) return;
@@ -348,6 +360,8 @@ export function registerAdminRoutes(app: Express) {
     try {
       const input = galleryApi.createBatch.input.parse(req.body);
       const works = await createGalleryWorksBatch(input.items);
+      const userId = (req.user as Express.User).id;
+      logAdminAction(userId, "gallery.create-batch", "gallery", undefined, { count: works.length }).catch(() => {});
       res.status(201).json(works.map((w) => ({ ...w, sortOrder: w.sortOrder ?? 0 })));
     } catch (err) {
       if (handleZodError(err, res)) return;
@@ -367,6 +381,8 @@ export function registerAdminRoutes(app: Express) {
       const input = galleryApi.update.input.parse(req.body);
       const work = await updateGalleryWork(id, input);
       if (!work) return res.status(404).json({ message: "Not found" });
+      const userId = (req.user as Express.User).id;
+      logAdminAction(userId, "gallery.update", "gallery", id).catch(() => {});
       res.json({ ...work, sortOrder: work.sortOrder ?? 0 });
     } catch (err) {
       if (handleZodError(err, res)) return;
@@ -382,6 +398,8 @@ export function registerAdminRoutes(app: Express) {
       if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
       const deleted = await deleteGalleryWork(id);
       if (!deleted) return res.status(404).json({ message: "Not found" });
+      const userId = (req.user as Express.User).id;
+      logAdminAction(userId, "gallery.delete", "gallery", id).catch(() => {});
       res.status(204).send();
     } catch (err) {
       console.error("DELETE /api/admin/gallery/:id:", err);
@@ -404,6 +422,8 @@ export function registerAdminRoutes(app: Express) {
     try {
       const input = productsApi.create.input.parse(req.body);
       const product = await createProduct(input);
+      const userId = (req.user as Express.User).id;
+      logAdminAction(userId, "product.create", "product", product.id).catch(() => {});
       res.status(201).json({ ...product, price: Number(product.price), sortOrder: product.sortOrder ?? 0 });
     } catch (err) {
       if (handleZodError(err, res)) return;
@@ -423,6 +443,8 @@ export function registerAdminRoutes(app: Express) {
       const input = productsApi.update.input.parse(req.body);
       const product = await updateProduct(id, input);
       if (!product) return res.status(404).json({ message: "Not found" });
+      const userId = (req.user as Express.User).id;
+      logAdminAction(userId, "product.update", "product", id).catch(() => {});
       res.json({ ...product, price: Number(product.price), sortOrder: product.sortOrder ?? 0 });
     } catch (err) {
       if (handleZodError(err, res)) return;
@@ -441,6 +463,8 @@ export function registerAdminRoutes(app: Express) {
       if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
       const deleted = await deleteProduct(id);
       if (!deleted) return res.status(404).json({ message: "Not found" });
+      const userId = (req.user as Express.User).id;
+      logAdminAction(userId, "product.delete", "product", id).catch(() => {});
       res.status(204).send();
     } catch (err) {
       console.error("DELETE /api/admin/products/:id:", err);
@@ -504,6 +528,8 @@ export function registerAdminRoutes(app: Express) {
       const order = await approveOrder(id, input.adminNote);
       if (!order) return res.status(404).json({ message: "Not found" });
 
+      const userId = (req.user as Express.User).id;
+      logAdminAction(userId, "order.approve", "order", id).catch(() => {});
       sendOrderApprovedToCustomer(order).catch((err) =>
         console.error("[email] Unexpected:", err instanceof Error ? err.message : "Unknown error")
       );
@@ -526,6 +552,8 @@ export function registerAdminRoutes(app: Express) {
       const order = await rejectOrder(id, input.adminNote);
       if (!order) return res.status(404).json({ message: "Not found" });
 
+      const userId = (req.user as Express.User).id;
+      logAdminAction(userId, "order.reject", "order", id).catch(() => {});
       sendOrderRejectedToCustomer(order).catch((err) =>
         console.error("[email] Unexpected:", err instanceof Error ? err.message : "Unknown error")
       );
@@ -534,6 +562,19 @@ export function registerAdminRoutes(app: Express) {
     } catch (err) {
       if (handleZodError(err, res)) return;
       console.error("PUT /api/admin/orders/:id/reject:", err);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Audit logs
+  protectedRouter.get("/api/admin/audit-logs", ...auth, async (req, res) => {
+    try {
+      const page = parseInt((req.query.page as string) || "1", 10);
+      const limit = parseInt((req.query.limit as string) || "50", 10);
+      const result = await listAuditLogs({ page, limit });
+      res.json({ logs: result.logs, total: result.total });
+    } catch (err) {
+      console.error("GET /api/admin/audit-logs:", err);
       res.status(500).json({ message: "Internal server error" });
     }
   });
