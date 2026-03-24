@@ -18,6 +18,7 @@ import {
   type PaymentStatus,
 } from "../shared/schema";
 import { DEFAULT_SITE_CONFIG } from "../shared/defaults";
+import { getAvailableStock, adjustStock } from "../shared/stock";
 
 // =============================================================================
 // SITE CONFIG
@@ -308,100 +309,8 @@ export async function getNextOrderNumber(): Promise<string> {
   return `TTW-${String(num).padStart(4, "0")}`;
 }
 
-/**
- * Get available stock for a product variant.
- * Returns null if stock is not tracked (unlimited).
- */
-export function getAvailableStock(
-  product: Product,
-  size?: string,
-  color?: string,
-): number | null {
-  // Most specific: size+color combination
-  if (size && color && product.sizeColorStock) {
-    const sizeMap = product.sizeColorStock[size];
-    if (sizeMap && color in sizeMap) return sizeMap[color];
-  }
-  // Size-only stock
-  if (size && product.sizeStock) {
-    if (size in product.sizeStock) return product.sizeStock[size];
-  }
-  // Color-only stock
-  if (color && product.colorStock) {
-    if (color in product.colorStock) return product.colorStock[color];
-  }
-  // No stock tracking for this variant
-  return null;
-}
-
-/**
- * Deduct stock for an order item. Mutates the product's stock fields in-place
- * and returns the updated stock values to persist.
- */
-function deductStock(
-  product: Product,
-  item: OrderItem,
-): Partial<Pick<Product, "sizeStock" | "colorStock" | "sizeColorStock">> {
-  const updates: Partial<Pick<Product, "sizeStock" | "colorStock" | "sizeColorStock">> = {};
-
-  if (item.size && item.color && product.sizeColorStock) {
-    const sizeMap = { ...product.sizeColorStock };
-    if (sizeMap[item.size]) {
-      sizeMap[item.size] = { ...sizeMap[item.size], [item.color]: (sizeMap[item.size][item.color] ?? 0) - item.quantity };
-      updates.sizeColorStock = sizeMap;
-    }
-  }
-  if (item.size && product.sizeStock) {
-    const stock = { ...product.sizeStock };
-    if (item.size in stock) {
-      stock[item.size] = (stock[item.size] ?? 0) - item.quantity;
-      updates.sizeStock = stock;
-    }
-  }
-  if (item.color && product.colorStock) {
-    const stock = { ...product.colorStock };
-    if (item.color in stock) {
-      stock[item.color] = (stock[item.color] ?? 0) - item.quantity;
-      updates.colorStock = stock;
-    }
-  }
-
-  return updates;
-}
-
-/**
- * Restore stock when an order is rejected.
- */
-function restoreStock(
-  product: Product,
-  item: OrderItem,
-): Partial<Pick<Product, "sizeStock" | "colorStock" | "sizeColorStock">> {
-  const updates: Partial<Pick<Product, "sizeStock" | "colorStock" | "sizeColorStock">> = {};
-
-  if (item.size && item.color && product.sizeColorStock) {
-    const sizeMap = { ...product.sizeColorStock };
-    if (sizeMap[item.size]) {
-      sizeMap[item.size] = { ...sizeMap[item.size], [item.color]: (sizeMap[item.size][item.color] ?? 0) + item.quantity };
-      updates.sizeColorStock = sizeMap;
-    }
-  }
-  if (item.size && product.sizeStock) {
-    const stock = { ...product.sizeStock };
-    if (item.size in stock) {
-      stock[item.size] = (stock[item.size] ?? 0) + item.quantity;
-      updates.sizeStock = stock;
-    }
-  }
-  if (item.color && product.colorStock) {
-    const stock = { ...product.colorStock };
-    if (item.color in stock) {
-      stock[item.color] = (stock[item.color] ?? 0) + item.quantity;
-      updates.colorStock = stock;
-    }
-  }
-
-  return updates;
-}
+// Re-export for routes.ts convenience
+export { getAvailableStock } from "../shared/stock";
 
 export async function createOrder(
   input: InsertOrder & {
@@ -433,7 +342,7 @@ export async function createOrder(
       }
 
       // Deduct stock
-      const stockUpdates = deductStock(product, item);
+      const stockUpdates = adjustStock(product, item, -1);
       if (Object.keys(stockUpdates).length > 0) {
         await trx
           .update(products)
@@ -602,7 +511,7 @@ export async function rejectOrder(
         .where(eq(products.id, item.productId));
       if (!product) continue;
 
-      const stockUpdates = restoreStock(product, item);
+      const stockUpdates = adjustStock(product, item, +1);
       if (Object.keys(stockUpdates).length > 0) {
         await trx
           .update(products)

@@ -1,6 +1,7 @@
 import "dotenv/config";
 import express, { type Request, Response, NextFunction } from "express";
 import helmet from "helmet";
+import compression from "compression";
 import passport from "passport";
 import { registerRoutes } from "./routes";
 import { setupPassport, getSessionMiddleware } from "./auth";
@@ -48,6 +49,8 @@ app.use(
     crossOriginEmbedderPolicy: !isDev,
   }),
 );
+
+app.use(compression());
 
 declare module "http" {
   interface IncomingMessage {

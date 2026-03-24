@@ -1,24 +1,12 @@
 import { Switch, Route, useLocation } from "wouter";
-import { useEffect } from "react";
+import { useEffect, lazy, Suspense } from "react";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { CartProvider } from "@/lib/cart";
 import { ErrorBoundary } from "@/components/error-boundary";
-import {
-  AdminAuthProvider,
-  AdminRouteGuard,
-  AdminDashboardPage,
-} from "@/admin";
-import { AdminConfigPage } from "@/admin/pages/admin-config";
-import { AdminNavCardsPage } from "@/admin/pages/admin-nav-cards";
-import { AdminGalleryPage } from "@/admin/pages/admin-gallery";
-import { AdminGalleryFormPage } from "@/admin/pages/admin-gallery-form-page";
-import { AdminProductsPage } from "@/admin/pages/admin-products";
-import { AdminProductFormPage } from "@/admin/pages/admin-product-form-page";
-import { AdminOrdersPage } from "@/admin/pages/admin-orders";
-import { AdminOrderDetailPage } from "@/admin/pages/admin-order-detail";
+import { AdminAuthProvider, AdminRouteGuard } from "@/admin";
 import Home from "@/pages/Home";
 import Portfolio from "@/pages/Portfolio";
 import Shop from "@/pages/Shop";
@@ -26,6 +14,29 @@ import ProductDetail from "@/pages/ProductDetail";
 import Cart from "@/pages/Cart";
 import OrderStatus from "@/pages/OrderStatus";
 import NotFound from "@/pages/not-found";
+
+// Lazy-load admin pages — not needed for public visitors
+const AdminDashboardPage = lazy(() => import("@/admin/pages/admin-dashboard").then(m => ({ default: m.AdminDashboardPage })));
+const AdminConfigPage = lazy(() => import("@/admin/pages/admin-config").then(m => ({ default: m.AdminConfigPage })));
+const AdminNavCardsPage = lazy(() => import("@/admin/pages/admin-nav-cards").then(m => ({ default: m.AdminNavCardsPage })));
+const AdminGalleryPage = lazy(() => import("@/admin/pages/admin-gallery").then(m => ({ default: m.AdminGalleryPage })));
+const AdminGalleryFormPage = lazy(() => import("@/admin/pages/admin-gallery-form-page").then(m => ({ default: m.AdminGalleryFormPage })));
+const AdminProductsPage = lazy(() => import("@/admin/pages/admin-products").then(m => ({ default: m.AdminProductsPage })));
+const AdminProductFormPage = lazy(() => import("@/admin/pages/admin-product-form-page").then(m => ({ default: m.AdminProductFormPage })));
+const AdminOrdersPage = lazy(() => import("@/admin/pages/admin-orders").then(m => ({ default: m.AdminOrdersPage })));
+const AdminOrderDetailPage = lazy(() => import("@/admin/pages/admin-order-detail").then(m => ({ default: m.AdminOrderDetailPage })));
+
+function AdminSuspense({ children }: { children: React.ReactNode }) {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin" />
+      </div>
+    }>
+      {children}
+    </Suspense>
+  );
+}
 
 function ScrollToTop() {
   const [location] = useLocation();
@@ -96,7 +107,9 @@ function AdminWrapper() {
 
   return (
     <AdminRouteGuard>
-      <Component />
+      <AdminSuspense>
+        <Component />
+      </AdminSuspense>
     </AdminRouteGuard>
   );
 }
@@ -104,7 +117,9 @@ function AdminWrapper() {
 function AdminProductFormWrapper() {
   return (
     <AdminRouteGuard>
-      <AdminProductFormPage />
+      <AdminSuspense>
+        <AdminProductFormPage />
+      </AdminSuspense>
     </AdminRouteGuard>
   );
 }
@@ -112,7 +127,9 @@ function AdminProductFormWrapper() {
 function AdminOrderDetailWrapper() {
   return (
     <AdminRouteGuard>
-      <AdminOrderDetailPage />
+      <AdminSuspense>
+        <AdminOrderDetailPage />
+      </AdminSuspense>
     </AdminRouteGuard>
   );
 }
@@ -120,7 +137,9 @@ function AdminOrderDetailWrapper() {
 function AdminGalleryFormWrapper() {
   return (
     <AdminRouteGuard>
-      <AdminGalleryFormPage />
+      <AdminSuspense>
+        <AdminGalleryFormPage />
+      </AdminSuspense>
     </AdminRouteGuard>
   );
 }

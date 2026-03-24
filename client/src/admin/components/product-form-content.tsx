@@ -149,12 +149,10 @@ export function ProductFormContent({
   const [customSizes, setCustomSizes] = useState<Array<{ id: string; name: string }>>(() => {
     const fromSizes = initial?.sizes ?? [];
     const fromStock = initial?.sizeColorStock ? Object.keys(initial.sizeColorStock) : [];
-    const customNames = [
-      ...new Set([
-        ...fromSizes.filter((s) => !AVAILABLE_SIZES.includes(s as (typeof AVAILABLE_SIZES)[number])),
-        ...fromStock.filter((s) => !AVAILABLE_SIZES.includes(s as (typeof AVAILABLE_SIZES)[number])),
-      ]),
-    ];
+    const customNames = Array.from(new Set([
+      ...fromSizes.filter((s) => !AVAILABLE_SIZES.includes(s as (typeof AVAILABLE_SIZES)[number])),
+      ...fromStock.filter((s) => !AVAILABLE_SIZES.includes(s as (typeof AVAILABLE_SIZES)[number])),
+    ]));
     return customNames.map((name) => ({ id: name, name }));
   });
 
