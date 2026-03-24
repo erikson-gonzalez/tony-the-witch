@@ -262,7 +262,7 @@ export default function Cart() {
             {step === "processing" && <CheckoutProcessingStep />}
 
             {step === "confirmed" && form.paymentMethod === "sinpe" && orderNumber && (
-              <SinpeConfirmedStep orderNumber={orderNumber} />
+              <SinpeConfirmedStep orderNumber={orderNumber} customerEmail={form.email} />
             )}
 
             {step === "confirmed" && form.paymentMethod !== "sinpe" && (

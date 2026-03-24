@@ -7,8 +7,15 @@ import bcrypt from "bcryptjs";
 import { getAdminUserByUsername } from "./storage-admin";
 import { pool } from "./db";
 
-const SESSION_SECRET =
-  process.env.SESSION_SECRET || "ttw-admin-secret-change-in-production";
+function getSessionSecret(): string {
+  const secret = process.env.SESSION_SECRET;
+  if (!secret) {
+    throw new Error(
+      "SESSION_SECRET environment variable is required. Generate one with: node -e \"console.log(require('crypto').randomBytes(32).toString('hex'))\""
+    );
+  }
+  return secret;
+}
 
 declare global {
   namespace Express {
@@ -46,10 +53,6 @@ export function setupPassport() {
 }
 
 export function getSessionMiddleware() {
-  if (process.env.NODE_ENV === "production" && !process.env.SESSION_SECRET) {
-    throw new Error("SESSION_SECRET must be set in production");
-  }
-
   const PgSession = connectPg(session);
 
   return session({
@@ -60,14 +63,14 @@ export function getSessionMiddleware() {
       // Run this SQL manually if the "session" table doesn't exist:
       // CREATE TABLE IF NOT EXISTS "session" ("sid" VARCHAR NOT NULL PRIMARY KEY, "sess" JSON NOT NULL, "expire" TIMESTAMP(6) NOT NULL); CREATE INDEX IF NOT EXISTS "IDX_session_expire" ON "session" ("expire");
     }),
-    secret: SESSION_SECRET,
+    secret: getSessionSecret(),
     resave: false,
     saveUninitialized: false,
     cookie: {
       secure: process.env.NODE_ENV === "production",
       httpOnly: true,
-      sameSite: "lax",
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      sameSite: "strict",
+      maxAge: 8 * 60 * 60 * 1000, // 8 hours
     },
   });
 }

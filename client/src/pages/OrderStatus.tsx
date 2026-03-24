@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { useParams, Link } from "wouter";
+import { useParams, useSearch, Link } from "wouter";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import {
@@ -9,6 +9,7 @@ import {
   XCircle,
   Upload,
   ArrowLeft,
+  Search,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -69,19 +70,75 @@ const STATUS_CONFIG: Record<
 
 export default function OrderStatus() {
   const { orderNumber } = useParams<{ orderNumber: string }>();
+  const searchString = useSearch();
+  const searchParams = new URLSearchParams(searchString);
+  const emailFromUrl = searchParams.get("email") || "";
   const { t } = useTranslation();
   const queryClient = useQueryClient();
 
+  const [email, setEmail] = useState(emailFromUrl);
+  const [submittedEmail, setSubmittedEmail] = useState(emailFromUrl);
+
   const { data: order, isLoading, error } = useQuery<OrderStatusData>({
-    queryKey: ["order-status", orderNumber],
+    queryKey: ["order-status", orderNumber, submittedEmail],
     queryFn: async () => {
-      const res = await fetch(`/api/orders/${orderNumber}/status`);
+      const res = await fetch(
+        `/api/orders/${orderNumber}/status?email=${encodeURIComponent(submittedEmail)}`
+      );
       if (res.status === 404) throw new Error("not_found");
+      if (res.status === 400) throw new Error("email_required");
       if (!res.ok) throw new Error("fetch_error");
       return res.json();
     },
-    enabled: !!orderNumber,
+    enabled: !!orderNumber && !!submittedEmail,
+    retry: false,
   });
+
+  // If no email provided (manual navigation), show lookup form
+  if (!submittedEmail) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+        <div className="w-full max-w-sm">
+          <h1 className="text-2xl font-bold text-slate-900 mb-2 text-center">
+            {t("orderStatus.title")}
+          </h1>
+          <p className="text-sm text-slate-500 text-center mb-6">
+            {t("orderStatus.enterEmail", {
+              defaultValue: "Ingresá tu email para ver el estado de tu pedido",
+            })}
+          </p>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (!email.trim()) return;
+              setSubmittedEmail(email.trim());
+            }}
+            className="space-y-3"
+          >
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="tu@email.com"
+              required
+              className="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-400"
+            />
+            <Button type="submit" className="w-full">
+              <Search size={16} className="mr-2" />
+              {t("orderStatus.lookup", { defaultValue: "Consultar pedido" })}
+            </Button>
+          </form>
+          <div className="mt-4 text-center">
+            <Link href="/shop">
+              <a className="text-blue-600 hover:underline text-sm">
+                {t("common.continueShopping")}
+              </a>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -98,6 +155,22 @@ export default function OrderStatus() {
           <h1 className="text-2xl font-bold text-slate-900 mb-2">
             {t("orderStatus.notFound")}
           </h1>
+          <p className="text-sm text-slate-500 mb-4">
+            {t("orderStatus.notFoundHint", {
+              defaultValue: "Verificá tu número de pedido y email.",
+            })}
+          </p>
+          <Button
+            variant="outline"
+            onClick={() => {
+              setSubmittedEmail("");
+              setEmail("");
+            }}
+            className="mb-2"
+          >
+            {t("orderStatus.tryAgain", { defaultValue: "Intentar de nuevo" })}
+          </Button>
+          <br />
           <Link href="/shop">
             <a className="text-blue-600 hover:underline text-sm">
               {t("common.continueShopping")}
@@ -159,9 +232,10 @@ export default function OrderStatus() {
         {order.paymentStatus === "rejected" && (
           <ReuploadSection
             orderNumber={order.orderNumber}
+            email={submittedEmail}
             onUploaded={() =>
               queryClient.invalidateQueries({
-                queryKey: ["order-status", orderNumber],
+                queryKey: ["order-status", orderNumber, submittedEmail],
               })
             }
           />
@@ -195,9 +269,11 @@ export default function OrderStatus() {
 
 function ReuploadSection({
   orderNumber,
+  email,
   onUploaded,
 }: {
   orderNumber: string;
+  email: string;
   onUploaded: () => void;
 }) {
   const { t } = useTranslation();
@@ -225,7 +301,7 @@ function ReuploadSection({
         const proofRes = await fetch(`/api/orders/${orderNumber}/reupload`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ proofImageUrl: url }),
+          body: JSON.stringify({ proofImageUrl: url, email }),
         });
         if (!proofRes.ok) throw new Error("Could not submit proof");
 
@@ -236,7 +312,7 @@ function ReuploadSection({
         setUploading(false);
       }
     },
-    [orderNumber, onUploaded]
+    [orderNumber, email, onUploaded]
   );
 
   return (

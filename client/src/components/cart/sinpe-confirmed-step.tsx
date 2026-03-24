@@ -5,9 +5,10 @@ import { useTranslation } from "react-i18next";
 
 interface SinpeConfirmedStepProps {
   orderNumber: string;
+  customerEmail: string;
 }
 
-export function SinpeConfirmedStep({ orderNumber }: SinpeConfirmedStepProps) {
+export function SinpeConfirmedStep({ orderNumber, customerEmail }: SinpeConfirmedStepProps) {
   const { t } = useTranslation();
 
   return (
@@ -38,7 +39,7 @@ export function SinpeConfirmedStep({ orderNumber }: SinpeConfirmedStepProps) {
 
       <div className="flex flex-col gap-4 items-center">
         <Link
-          href={`/order/${orderNumber}`}
+          href={`/order/${orderNumber}?email=${encodeURIComponent(customerEmail)}`}
           className="text-sm uppercase tracking-widest border-b border-amber-400/50 pb-1 text-amber-400 hover:border-amber-400 transition-colors"
         >
           {t("checkout.sinpeViewStatus")}

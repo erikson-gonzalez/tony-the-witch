@@ -42,6 +42,14 @@ const orderLimiter = rateLimit({
   message: { message: "Demasiadas solicitudes. Intentá de nuevo en unos minutos." },
 });
 
+const proofUploadLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: "Demasiados intentos de subida. Intentá de nuevo más tarde." },
+});
+
 const proofUpload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 },
@@ -172,6 +180,7 @@ export async function registerRoutes(
   // Upload proof image (public, no auth)
   app.post(
     "/api/upload/proof",
+    proofUploadLimiter,
     proofUpload.single("file"),
     async (req, res) => {
       try {
@@ -210,8 +219,12 @@ export async function registerRoutes(
   app.post("/api/orders/:orderNumber/reupload", orderLimiter, async (req, res) => {
     try {
       const orderNum = Array.isArray(req.params.orderNumber) ? req.params.orderNumber[0] : req.params.orderNumber;
+      const email = req.body.email as string | undefined;
       const order = await getOrderByNumber(orderNum ?? "");
-      if (!order) return res.status(404).json({ message: "Pedido no encontrado" });
+      // Same 404 for not found and email mismatch to prevent enumeration
+      if (!order || !email || order.customerEmail.toLowerCase() !== email.toLowerCase()) {
+        return res.status(404).json({ message: "Pedido no encontrado" });
+      }
 
       if (order.paymentStatus !== "pending" && order.paymentStatus !== "rejected") {
         return res
@@ -288,11 +301,28 @@ export async function registerRoutes(
     }
   });
 
-  // Public order status
-  app.get("/api/orders/:orderNumber/status", async (req, res) => {
+  // Public order status (requires email verification to prevent enumeration)
+  const orderStatusLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 10,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { message: "Demasiados intentos. Intentá de nuevo en unos minutos." },
+  });
+
+  app.get("/api/orders/:orderNumber/status", orderStatusLimiter, async (req, res) => {
     try {
-      const order = await getOrderByNumber(req.params.orderNumber);
-      if (!order) return res.status(404).json({ message: "Pedido no encontrado" });
+      const email = req.query.email as string | undefined;
+      if (!email || typeof email !== "string") {
+        return res.status(400).json({ message: "Email requerido" });
+      }
+
+      const orderNum = Array.isArray(req.params.orderNumber) ? req.params.orderNumber[0] : req.params.orderNumber;
+      const order = await getOrderByNumber(orderNum ?? "");
+      // Return same 404 whether order doesn't exist or email doesn't match (prevents enumeration)
+      if (!order || order.customerEmail.toLowerCase() !== email.toLowerCase()) {
+        return res.status(404).json({ message: "Pedido no encontrado" });
+      }
 
       const firstName = order.customerName.split(" ")[0];
 

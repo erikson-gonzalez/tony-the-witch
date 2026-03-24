@@ -328,7 +328,7 @@ export function buildOrderCustomerConfirmation(order: Order): {
       ${sinpeReminder}
 
       <div style="margin-top:20px">
-        ${ctaButton(`${appUrl}/order/${order.orderNumber}`, "Ver estado de tu pedido")}
+        ${ctaButton(`${appUrl}/order/${order.orderNumber}?email=${encodeURIComponent(order.customerEmail)}`, "Ver estado de tu pedido")}
       </div>
 
       ${emailFooter()}
@@ -388,7 +388,7 @@ export function buildOrderApprovedNotification(order: Order): {
       ${adminNoteSection}
 
       <div style="margin-top:20px">
-        ${ctaButton(`${appUrl}/order/${order.orderNumber}`, "Ver estado")}
+        ${ctaButton(`${appUrl}/order/${order.orderNumber}?email=${encodeURIComponent(order.customerEmail)}`, "Ver estado")}
       </div>
 
       <p style="margin-top:16px;font-size:13px;color:#64748b">
@@ -440,7 +440,7 @@ export function buildOrderRejectedNotification(order: Order): {
       <p>Podés subir un nuevo comprobante:</p>
 
       <div style="margin-top:16px">
-        ${ctaButton(`${appUrl}/order/${order.orderNumber}`, "Subir comprobante")}
+        ${ctaButton(`${appUrl}/order/${order.orderNumber}?email=${encodeURIComponent(order.customerEmail)}`, "Subir comprobante")}
       </div>
 
       <p style="margin-top:16px;font-size:13px;color:#64748b">

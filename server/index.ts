@@ -1,5 +1,6 @@
 import "dotenv/config";
 import express, { type Request, Response, NextFunction } from "express";
+import helmet from "helmet";
 import passport from "passport";
 import { registerRoutes } from "./routes";
 import { setupPassport, getSessionMiddleware } from "./auth";
@@ -10,6 +11,43 @@ import { createServer } from "http";
 const app = express();
 app.set("trust proxy", 1);
 const httpServer = createServer(app);
+
+const isDev = process.env.NODE_ENV !== "production";
+
+// Security headers via helmet — applied early before any routes
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: isDev
+          ? ["'self'", "'unsafe-inline'", "'unsafe-eval'"]
+          : ["'self'"],
+        styleSrc: [
+          "'self'",
+          "'unsafe-inline'",
+          "https://fonts.googleapis.com",
+        ],
+        imgSrc: [
+          "'self'",
+          "data:",
+          "https://res.cloudinary.com",
+          "https://images.unsplash.com",
+        ],
+        mediaSrc: ["'self'", "https://res.cloudinary.com"],
+        fontSrc: [
+          "'self'",
+          "https://fonts.googleapis.com",
+          "https://fonts.gstatic.com",
+        ],
+        connectSrc: isDev
+          ? ["'self'", "ws:", "wss:"]
+          : ["'self'"],
+      },
+    },
+    crossOriginEmbedderPolicy: !isDev,
+  }),
+);
 
 declare module "http" {
   interface IncomingMessage {

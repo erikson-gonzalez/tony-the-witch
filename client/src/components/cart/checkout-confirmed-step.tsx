@@ -48,7 +48,7 @@ export function CheckoutConfirmedStep({
       <div className="flex flex-col gap-4 items-center">
         {orderNumber && (
           <Link
-            href={`/order/${orderNumber}`}
+            href={`/order/${orderNumber}?email=${encodeURIComponent(customerEmail)}`}
             className="text-sm uppercase tracking-widest border-b border-white/30 pb-1 hover:border-white transition-colors text-gray-400 hover:text-white"
           >
             {t("checkout.sinpeViewStatus")}

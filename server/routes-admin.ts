@@ -1,6 +1,7 @@
 import type { Express, Response } from "express";
 import { z } from "zod";
 import passport from "passport";
+import rateLimit from "express-rate-limit";
 import multer from "multer";
 import { uploadMedia } from "./cloudinary";
 import {
@@ -146,8 +147,17 @@ function getDefaultProducts() {
 // Auth routes
 // -----------------------------------------------------------------------------
 
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5,
+  skipSuccessfulRequests: true,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: "Demasiados intentos. Intenta de nuevo en 15 minutos." },
+});
+
 export function registerAuthRoutes(app: Express) {
-  app.post(authApi.login.path, (req, res, next) => {
+  app.post(authApi.login.path, loginLimiter, (req, res, next) => {
     passport.authenticate("local", (err: Error | null, user: Express.User | false) => {
       if (err) return res.status(500).json({ message: "Internal server error" });
       if (!user) return res.status(401).json({ message: "Unauthorized" });
@@ -182,7 +192,6 @@ const ALLOWED_IMAGE_MIMES = [
   "image/png",
   "image/webp",
   "image/gif",
-  "image/svg+xml",
 ];
 const ALLOWED_VIDEO_MIMES = [
   "video/mp4",
@@ -212,8 +221,8 @@ function validateConfigMedia(input: Record<string, unknown>): string | null {
 
   const err =
     checkDataUrl(hero?.videoUrl, ALLOWED_VIDEO_MIMES, "Video hero", "solo videos (MP4, WebM, OGG)") ??
-    checkDataUrl(hero?.logoUrl, ALLOWED_IMAGE_MIMES, "Logo hero", "solo imágenes (JPEG, PNG, WebP, GIF, SVG)") ??
-    checkDataUrl(footer?.imageUrl, ALLOWED_IMAGE_MIMES, "Imagen footer", "solo imágenes (JPEG, PNG, WebP, GIF, SVG)");
+    checkDataUrl(hero?.logoUrl, ALLOWED_IMAGE_MIMES, "Logo hero", "solo imágenes (JPEG, PNG, WebP, GIF)") ??
+    checkDataUrl(footer?.imageUrl, ALLOWED_IMAGE_MIMES, "Imagen footer", "solo imágenes (JPEG, PNG, WebP, GIF)");
   return err ?? null;
 }
 
@@ -546,14 +555,20 @@ export function registerAdminRoutes(app: Express) {
         }
 
         const mime = req.file.mimetype;
-        const isVideo = mime.startsWith("video/");
-        const isImage = mime.startsWith("image/");
-
-        if (!isVideo && !isImage) {
-          return res.status(400).json({ message: "Unsupported file type" });
+        const UPLOAD_ALLOWED_MIMES = [
+          ...ALLOWED_IMAGE_MIMES,
+          ...ALLOWED_VIDEO_MIMES,
+        ];
+        if (!UPLOAD_ALLOWED_MIMES.includes(mime)) {
+          return res.status(400).json({ message: "Tipo de archivo no soportado" });
         }
 
-        const folder = (req.body.folder as string) || "general";
+        const isVideo = mime.startsWith("video/");
+
+        const ALLOWED_FOLDERS = ["general", "gallery", "products", "sinpe-proofs", "hero", "artist"];
+        const folder = ALLOWED_FOLDERS.includes(req.body.folder as string)
+          ? (req.body.folder as string)
+          : "general";
         const result = await uploadMedia(req.file.buffer, {
           folder,
           resourceType: isVideo ? "video" : "image",
