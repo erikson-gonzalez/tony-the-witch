@@ -5,6 +5,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { CartProvider } from "@/lib/cart";
+import { ErrorBoundary } from "@/components/error-boundary";
 import {
   AdminAuthProvider,
   AdminRouteGuard,
@@ -49,6 +50,12 @@ function AdminThemeEffect() {
 function Router() {
   return (
     <>
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:bg-white focus:text-black focus:px-4 focus:py-2 focus:text-sm"
+      >
+        Saltar al contenido
+      </a>
       <ScrollToTop />
       <AdminThemeEffect />
       <Switch>
@@ -120,16 +127,18 @@ function AdminGalleryFormWrapper() {
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <AdminAuthProvider>
-          <CartProvider>
-            <Router />
-            <Toaster />
-          </CartProvider>
-        </AdminAuthProvider>
-      </TooltipProvider>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <AdminAuthProvider>
+            <CartProvider>
+              <Router />
+              <Toaster />
+            </CartProvider>
+          </AdminAuthProvider>
+        </TooltipProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 

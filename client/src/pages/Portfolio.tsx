@@ -5,9 +5,14 @@ import { motion } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import { Link } from "wouter";
 import { useTranslation } from "react-i18next";
+import { useDocumentMeta } from "@/hooks/use-document-meta";
 
 export default function Portfolio() {
   const { t } = useTranslation();
+  useDocumentMeta({
+    title: "Portfolio — Tony The Witch",
+    description: "Portafolio de tatuajes por Tony The Witch. Tatuajes, pinturas y arte.",
+  });
   return (
     <div className="bg-black min-h-screen text-white selection:bg-white selection:text-black flex flex-col">
       <Navigation />

@@ -166,8 +166,19 @@ export function useCheckout(
       });
 
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        setFormErrors({ _api: (data as { message?: string }).message || "checkout.errorCreateOrder" });
+        const data = await res.json().catch(() => ({})) as {
+          message?: string;
+          productId?: number;
+          available?: number;
+        };
+        if (res.status === 409 && data.available !== undefined) {
+          // Stock error — show specific message
+          setFormErrors({ _api: data.message || "Stock insuficiente" });
+        } else if (res.status === 400) {
+          setFormErrors({ _api: data.message || "Datos de pedido inválidos" });
+        } else {
+          setFormErrors({ _api: data.message || "Error al crear el pedido. Intentá de nuevo." });
+        }
         return false;
       }
 
@@ -177,7 +188,7 @@ export function useCheckout(
       setOrderTotalCrc(data.totalCrc);
       return true;
     } catch {
-      setFormErrors({ _api: "checkout.errorConnection" });
+      setFormErrors({ _api: "Error de conexión. Verificá tu internet e intentá de nuevo." });
       return false;
     } finally {
       setIsSubmitting(false);

@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { useState, useMemo } from "react";
 import { Link } from "wouter";
 import { useTranslation } from "react-i18next";
+import { useDocumentMeta } from "@/hooks/use-document-meta";
 import { formatPrice, getUsdToCrc } from "@/utils/formatPrice";
 import { getCategoryKey } from "@/utils/category-i18n";
 import { CUSTOM_SESSION_SLUG } from "@/constants/custom-session";
@@ -28,6 +29,10 @@ function getCustomSessionProduct(config: { tattooSession?: { name?: string; imag
 
 export default function Shop() {
   const { t, i18n } = useTranslation();
+  useDocumentMeta({
+    title: "Tienda — Tony The Witch",
+    description: "Merch exclusivo de Tony The Witch. Camisetas, prints y accesorios.",
+  });
   const [activeCategory, setActiveCategory] = useState<string>("All");
   const { products, shopCategories, config, isLoading } = useContent();
 

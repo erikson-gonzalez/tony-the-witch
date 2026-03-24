@@ -30,8 +30,10 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
     try {
       const data = await adminApi.auth.me();
       setUsername(data.username);
+      sessionStorage.setItem("admin_auth", "1");
     } catch {
       setUsername(null);
+      sessionStorage.removeItem("admin_auth");
     } finally {
       setIsLoading(false);
     }
@@ -58,6 +60,7 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
       await adminApi.auth.logout();
     } finally {
       setUsername(null);
+      sessionStorage.removeItem("admin_auth");
     }
   }, []);
 

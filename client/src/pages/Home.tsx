@@ -21,7 +21,7 @@ export default function Home() {
     <div className="bg-black min-h-screen text-white selection:bg-white selection:text-black flex flex-col">
       <Navigation />
 
-      <main className="flex-1">
+      <main id="main-content" className="flex-1">
         <ParallaxHero />
 
         <section className="py-16 md:py-32 bg-black">

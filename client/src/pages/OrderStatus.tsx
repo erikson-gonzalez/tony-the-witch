@@ -12,6 +12,7 @@ import {
   Search,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useDocumentMeta } from "@/hooks/use-document-meta";
 
 interface OrderStatusData {
   orderNumber: string;
@@ -75,6 +76,7 @@ export default function OrderStatus() {
   const emailFromUrl = searchParams.get("email") || "";
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  useDocumentMeta({ title: "Estado del pedido — Tony The Witch", noindex: true });
 
   const [email, setEmail] = useState(emailFromUrl);
   const [submittedEmail, setSubmittedEmail] = useState(emailFromUrl);
