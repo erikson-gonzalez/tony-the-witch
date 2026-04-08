@@ -91,7 +91,7 @@ export default function Shop() {
     <div className="bg-black min-h-screen text-white selection:bg-white selection:text-black flex flex-col">
       <Navigation />
 
-      <main className="flex-1 pt-32 pb-24">
+      <main id="main-content" className="flex-1 pt-32 pb-24">
         <div className="container mx-auto px-4 md:px-6">
           <div className="flex flex-col items-center mb-16">
             <span className="text-sm uppercase tracking-widest text-gray-500 mb-2">

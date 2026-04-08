@@ -47,7 +47,11 @@ export const queryClient = new QueryClient({
       queryFn: getQueryFn({ on401: "throw" }),
       refetchInterval: false,
       refetchOnWindowFocus: false,
-      staleTime: Infinity,
+      refetchOnReconnect: true,
+      // 1 minute default. Hot resources (public content, admin lists) override
+      // explicitly; mutations always invalidate the relevant keys.
+      staleTime: 60 * 1000,
+      gcTime: 5 * 60 * 1000,
       retry: false,
     },
     mutations: {

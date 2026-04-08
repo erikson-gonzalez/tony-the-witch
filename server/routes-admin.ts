@@ -44,7 +44,7 @@ import {
   addEclipticPayment,
   deleteEclipticPayment,
 } from "./storage-admin";
-import { requireAdmin } from "./auth";
+import { requireAdmin, requireCsrf, getOrCreateCsrfToken } from "./auth";
 import {
   sendOrderApprovedToCustomer,
   sendOrderRejectedToCustomer,
@@ -164,6 +164,25 @@ const loginLimiter = rateLimit({
   message: { message: "Demasiados intentos. Intenta de nuevo en 15 minutos." },
 });
 
+// Defense-in-depth on authenticated admin mutations. Even with a valid session
+// these caps prevent a runaway script (or compromised cookie) from exhausting
+// the database or third-party quotas.
+const adminMutationLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: "Demasiadas operaciones. Intenta de nuevo en un minuto." },
+});
+
+const adminUploadLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: "Demasiadas subidas. Intenta de nuevo en un minuto." },
+});
+
 export function registerAuthRoutes(app: Express) {
   app.post(authApi.login.path, loginLimiter, (req, res, next) => {
     passport.authenticate("local", (err: Error | null, user: Express.User | false) => {
@@ -171,7 +190,12 @@ export function registerAuthRoutes(app: Express) {
       if (!user) return res.status(401).json({ message: "Unauthorized" });
       req.login(user, (loginErr) => {
         if (loginErr) return res.status(500).json({ message: "Internal server error" });
-        res.json({ success: true, username: (user as { username: string }).username });
+        const csrfToken = getOrCreateCsrfToken(req);
+        res.json({
+          success: true,
+          username: (user as { username: string }).username,
+          csrfToken,
+        });
       });
     })(req, res, next);
   });
@@ -185,7 +209,12 @@ export function registerAuthRoutes(app: Express) {
 
   app.get(authApi.me.path, (req, res) => {
     if (req.isAuthenticated && req.isAuthenticated()) {
-      return res.json({ username: (req.user as { username: string }).username, authenticated: true });
+      const csrfToken = getOrCreateCsrfToken(req);
+      return res.json({
+        username: (req.user as { username: string }).username,
+        authenticated: true,
+        csrfToken,
+      });
     }
     res.status(401).json({ message: "Unauthorized" });
   });
@@ -248,6 +277,10 @@ function handleZodError(err: unknown, res: Response): boolean {
 export function registerAdminRoutes(app: Express) {
   const protectedRouter = app;
   const auth = [requireAdmin];
+  // Mutation chain for any POST/PUT/DELETE: rate limit first, then auth, then
+  // CSRF. Order: limiter sheds load before doing real work; requireAdmin runs
+  // before requireCsrf so unauthenticated requests get 401, not 403.
+  const mutationAuth = [adminMutationLimiter, requireAdmin, requireCsrf];
 
   // Config
   protectedRouter.get(configApi.get.path, ...auth, async (_req, res) => {
@@ -260,7 +293,7 @@ export function registerAdminRoutes(app: Express) {
     }
   });
 
-  protectedRouter.put(configApi.update.path, ...auth, async (req, res) => {
+  protectedRouter.put(configApi.update.path, ...mutationAuth, async (req, res) => {
     try {
       const input = configApi.update.input.parse(req.body);
       const mediaError = validateConfigMedia(input);
@@ -289,7 +322,7 @@ export function registerAdminRoutes(app: Express) {
     }
   });
 
-  protectedRouter.post(navCardsApi.create.path, ...auth, async (req, res) => {
+  protectedRouter.post(navCardsApi.create.path, ...mutationAuth, async (req, res) => {
     try {
       const input = navCardsApi.create.input.parse(req.body);
       const card = await createNavCard(input);
@@ -303,7 +336,7 @@ export function registerAdminRoutes(app: Express) {
     }
   });
 
-  protectedRouter.put("/api/admin/nav-cards/:id", ...auth, async (req, res) => {
+  protectedRouter.put("/api/admin/nav-cards/:id", ...mutationAuth, async (req, res) => {
     try {
       const idParam = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
       const id = parseInt(idParam ?? "", 10);
@@ -321,7 +354,7 @@ export function registerAdminRoutes(app: Express) {
     }
   });
 
-  protectedRouter.delete("/api/admin/nav-cards/:id", ...auth, async (req, res) => {
+  protectedRouter.delete("/api/admin/nav-cards/:id", ...mutationAuth, async (req, res) => {
     try {
       const idParam = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
       const id = parseInt(idParam ?? "", 10);
@@ -348,7 +381,7 @@ export function registerAdminRoutes(app: Express) {
     }
   });
 
-  protectedRouter.post(galleryApi.create.path, ...auth, async (req, res) => {
+  protectedRouter.post(galleryApi.create.path, ...mutationAuth, async (req, res) => {
     try {
       const input = galleryApi.create.input.parse(req.body);
       const work = await createGalleryWork(input);
@@ -362,7 +395,7 @@ export function registerAdminRoutes(app: Express) {
     }
   });
 
-  protectedRouter.post(galleryApi.createBatch.path, ...auth, async (req, res) => {
+  protectedRouter.post(galleryApi.createBatch.path, ...mutationAuth, async (req, res) => {
     try {
       const input = galleryApi.createBatch.input.parse(req.body);
       const works = await createGalleryWorksBatch(input.items);
@@ -379,7 +412,7 @@ export function registerAdminRoutes(app: Express) {
     }
   });
 
-  protectedRouter.put("/api/admin/gallery/:id", ...auth, async (req, res) => {
+  protectedRouter.put("/api/admin/gallery/:id", ...mutationAuth, async (req, res) => {
     try {
       const idParam = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
       const id = parseInt(idParam ?? "", 10);
@@ -397,7 +430,7 @@ export function registerAdminRoutes(app: Express) {
     }
   });
 
-  protectedRouter.delete("/api/admin/gallery/:id", ...auth, async (req, res) => {
+  protectedRouter.delete("/api/admin/gallery/:id", ...mutationAuth, async (req, res) => {
     try {
       const idParam = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
       const id = parseInt(idParam ?? "", 10);
@@ -424,7 +457,7 @@ export function registerAdminRoutes(app: Express) {
     }
   });
 
-  protectedRouter.post(productsApi.create.path, ...auth, async (req, res) => {
+  protectedRouter.post(productsApi.create.path, ...mutationAuth, async (req, res) => {
     try {
       const input = productsApi.create.input.parse(req.body);
       const product = await createProduct(input);
@@ -441,7 +474,7 @@ export function registerAdminRoutes(app: Express) {
     }
   });
 
-  protectedRouter.put("/api/admin/products/:id", ...auth, async (req, res) => {
+  protectedRouter.put("/api/admin/products/:id", ...mutationAuth, async (req, res) => {
     try {
       const idParam = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
       const id = parseInt(idParam ?? "", 10);
@@ -462,7 +495,7 @@ export function registerAdminRoutes(app: Express) {
     }
   });
 
-  protectedRouter.delete("/api/admin/products/:id", ...auth, async (req, res) => {
+  protectedRouter.delete("/api/admin/products/:id", ...mutationAuth, async (req, res) => {
     try {
       const idParam = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
       const id = parseInt(idParam ?? "", 10);
@@ -524,7 +557,7 @@ export function registerAdminRoutes(app: Express) {
     }
   });
 
-  protectedRouter.put("/api/admin/orders/:id/approve", ...auth, async (req, res) => {
+  protectedRouter.put("/api/admin/orders/:id/approve", ...mutationAuth, async (req, res) => {
     try {
       const idParam = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
       const id = parseInt(idParam ?? "", 10);
@@ -548,7 +581,7 @@ export function registerAdminRoutes(app: Express) {
     }
   });
 
-  protectedRouter.put("/api/admin/orders/:id/reject", ...auth, async (req, res) => {
+  protectedRouter.put("/api/admin/orders/:id/reject", ...mutationAuth, async (req, res) => {
     try {
       const idParam = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
       const id = parseInt(idParam ?? "", 10);
@@ -618,7 +651,7 @@ export function registerAdminRoutes(app: Express) {
     }
   });
 
-  protectedRouter.put("/api/admin/billing/ecliptic/config", ...auth, async (req, res) => {
+  protectedRouter.put("/api/admin/billing/ecliptic/config", ...mutationAuth, async (req, res) => {
     try {
       const schema = z.object({
         totalDebt: z.number().int().min(0),
@@ -636,7 +669,7 @@ export function registerAdminRoutes(app: Express) {
     }
   });
 
-  protectedRouter.post("/api/admin/billing/ecliptic/payments", ...auth, async (req, res) => {
+  protectedRouter.post("/api/admin/billing/ecliptic/payments", ...mutationAuth, async (req, res) => {
     try {
       const schema = z.object({
         amount: z.number().int().min(1),
@@ -655,7 +688,7 @@ export function registerAdminRoutes(app: Express) {
     }
   });
 
-  protectedRouter.delete("/api/admin/billing/ecliptic/payments/:id", ...auth, async (req, res) => {
+  protectedRouter.delete("/api/admin/billing/ecliptic/payments/:id", ...mutationAuth, async (req, res) => {
     try {
       const idParam = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
       const id = parseInt(idParam ?? "", 10);
@@ -679,7 +712,9 @@ export function registerAdminRoutes(app: Express) {
 
   protectedRouter.post(
     "/api/admin/upload",
-    ...auth,
+    adminUploadLimiter,
+    requireAdmin,
+    requireCsrf,
     upload.single("file"),
     async (req, res) => {
       try {

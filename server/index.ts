@@ -7,6 +7,7 @@ import { registerRoutes } from "./routes";
 import { setupPassport, getSessionMiddleware } from "./auth";
 import { serveStatic } from "./static";
 import { initEmail } from "./email";
+import { pool } from "./db";
 import { createServer } from "http";
 
 const app = express();
@@ -67,6 +68,29 @@ app.use(
 );
 
 app.use(express.urlencoded({ extended: false }));
+
+// Health check — registered before auth/sessions so it never hits the DB unless asked.
+// Use ?deep=1 to verify the database connection.
+app.get("/api/health", async (req, res) => {
+  if (req.query.deep === "1") {
+    const start = Date.now();
+    try {
+      await pool.query("SELECT 1");
+      const ms = Date.now() - start;
+      if (ms > 2000) {
+        return res.status(503).json({ ok: false, db: "slow", ms });
+      }
+      return res.json({ ok: true, db: "ok", ms, ts: Date.now() });
+    } catch (err) {
+      return res.status(503).json({
+        ok: false,
+        db: "error",
+        message: err instanceof Error ? err.message : "unknown",
+      });
+    }
+  }
+  res.json({ ok: true, ts: Date.now() });
+});
 
 // Email service
 initEmail();

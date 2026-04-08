@@ -266,6 +266,14 @@ export async function getAdminUserByUsername(username: string) {
   return user ?? null;
 }
 
+export async function getAdminUserById(id: number) {
+  const [user] = await db
+    .select()
+    .from(adminUsers)
+    .where(eq(adminUsers.id, id));
+  return user ?? null;
+}
+
 export async function createAdminUser(username: string, passwordHash: string) {
   const [user] = await db
     .insert(adminUsers)

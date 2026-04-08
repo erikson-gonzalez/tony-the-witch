@@ -70,7 +70,7 @@ export default function ProductDetail() {
     <div className="bg-black min-h-screen text-white selection:bg-white selection:text-black flex flex-col">
       <Navigation />
 
-      <main className="flex-1 pt-24 pb-24">
+      <main id="main-content" className="flex-1 pt-24 pb-24">
         <div className="container mx-auto px-4 md:px-6">
           <div className="mb-8">
             <Link href="/shop" data-testid="link-back-shop">

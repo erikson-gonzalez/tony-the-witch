@@ -12,7 +12,7 @@ export default function NotFound() {
     <div className="bg-black min-h-screen text-white selection:bg-white selection:text-black flex flex-col">
       <Navigation />
 
-      <main className="flex-1 flex items-center justify-center px-4 py-16">
+      <main id="main-content" className="flex-1 flex items-center justify-center px-4 py-16">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

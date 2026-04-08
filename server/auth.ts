@@ -4,8 +4,16 @@ import session from "express-session";
 import connectPg from "connect-pg-simple";
 import type { Request, Response, NextFunction } from "express";
 import bcrypt from "bcryptjs";
-import { getAdminUserByUsername } from "./storage-admin";
+import crypto from "crypto";
+import { getAdminUserByUsername, getAdminUserById } from "./storage-admin";
 import { pool } from "./db";
+
+// Augment express-session so TS knows about our custom field
+declare module "express-session" {
+  interface SessionData {
+    csrfToken?: string;
+  }
+}
 
 function getSessionSecret(): string {
   const secret = process.env.SESSION_SECRET;
@@ -43,12 +51,25 @@ export function setupPassport() {
     })
   );
 
+  // Store only the user id in the session. The user is re-fetched from the
+  // database on every request so revoked admins lose access immediately
+  // instead of having to wait for the session to expire.
   passport.serializeUser((user: Express.User, done) => {
-    done(null, user);
+    done(null, user.id);
   });
 
-  passport.deserializeUser((user: Express.User, done) => {
-    done(null, user);
+  passport.deserializeUser(async (id: unknown, done) => {
+    try {
+      if (typeof id !== "number" || !Number.isInteger(id) || id <= 0) {
+        return done(null, false);
+      }
+      const user = await getAdminUserById(id);
+      if (!user) return done(null, false);
+      // Strip the password hash before exposing on req.user
+      done(null, { id: user.id, username: user.username });
+    } catch (err) {
+      done(err);
+    }
   });
 }
 
@@ -81,4 +102,36 @@ export function requireAdmin(req: Request, res: Response, next: NextFunction) {
     return next();
   }
   res.status(401).json({ message: "Unauthorized" });
+}
+
+/**
+ * Returns the per-session CSRF token, creating it lazily on first call.
+ * The token is stored in the session (server-side) and the client receives
+ * it via the login/me response payload — never via a cookie, so XSS-stolen
+ * session cookies still can't trivially submit forged mutations.
+ */
+export function getOrCreateCsrfToken(req: Request): string {
+  if (!req.session.csrfToken) {
+    req.session.csrfToken = crypto.randomBytes(32).toString("hex");
+  }
+  return req.session.csrfToken;
+}
+
+/**
+ * Middleware: enforce that the request carries a matching CSRF token in the
+ * X-CSRF-Token header. Apply after requireAdmin so unauthenticated requests
+ * get a 401, not a 403.
+ */
+export function requireCsrf(req: Request, res: Response, next: NextFunction) {
+  const sessionToken = req.session.csrfToken;
+  const headerToken = req.get("X-CSRF-Token");
+  if (!sessionToken || !headerToken) {
+    return res.status(403).json({ message: "CSRF token missing" });
+  }
+  const a = Buffer.from(sessionToken);
+  const b = Buffer.from(headerToken);
+  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
+    return res.status(403).json({ message: "CSRF token invalid" });
+  }
+  next();
 }

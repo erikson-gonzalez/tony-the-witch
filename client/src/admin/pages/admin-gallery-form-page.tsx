@@ -31,14 +31,14 @@ export function AdminGalleryFormPage() {
 
   const isNew = id === null || params.id === "new";
   const work = !isNew && id
-    ? (works as Array<Record<string, unknown>>).find((w) => w.id === id)
+    ? works.find((w) => w.id === id)
     : null;
 
   const [images, setImages] = useState<ImageItem[]>([]);
   const [category, setCategory] = useState("");
   const [singleImageUrl, setSingleImageUrl] = useState("");
 
-  const countByCategory = (works as Array<{ category: string }>).reduce(
+  const countByCategory = works.reduce(
     (acc, w) => {
       acc[w.category] = (acc[w.category] ?? 0) + 1;
       return acc;

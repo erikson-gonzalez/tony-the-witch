@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { getCsrfToken } from "@/api/admin";
 
 interface UploadResult {
   url: string;
@@ -15,9 +16,14 @@ export function useUpload() {
       formData.append("file", file);
       formData.append("folder", folder);
 
+      const headers: Record<string, string> = {};
+      const token = getCsrfToken();
+      if (token) headers["X-CSRF-Token"] = token;
+
       const res = await fetch("/api/admin/upload", {
         method: "POST",
         credentials: "include",
+        headers,
         body: formData,
       });
 

@@ -99,7 +99,7 @@ export default function OrderStatus() {
   // If no email provided (manual navigation), show lookup form
   if (!submittedEmail) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+      <div id="main-content" className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
         <div className="w-full max-w-sm">
           <h1 className="text-2xl font-bold text-slate-900 mb-2 text-center">
             {t("orderStatus.title")}
@@ -144,7 +144,7 @@ export default function OrderStatus() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div id="main-content" className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin" />
       </div>
     );
@@ -152,7 +152,7 @@ export default function OrderStatus() {
 
   if (error || !order) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+      <div id="main-content" className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-slate-900 mb-2">
             {t("orderStatus.notFound")}
@@ -192,7 +192,7 @@ export default function OrderStatus() {
   });
 
   return (
-    <div className="min-h-screen bg-slate-50 py-8 px-4">
+    <div id="main-content" className="min-h-screen bg-slate-50 py-8 px-4">
       <div className="max-w-lg mx-auto">
         <Link href="/shop">
           <a className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700 mb-6">

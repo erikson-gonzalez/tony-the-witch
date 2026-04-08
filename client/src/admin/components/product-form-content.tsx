@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { useTranslation } from "react-i18next";
+import { Trans, useTranslation } from "react-i18next";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -442,14 +442,16 @@ export function ProductFormContent({
               <span>{t("admin.feeCalculator", { paypal: FEE_LABELS.paypal, platform: FEE_LABELS.platform })}</span>
             </p>
             {price && parseFormattedAmount(price, true) > 0 && (
-              <p className="text-sm text-slate-700"
-                dangerouslySetInnerHTML={{
-                  __html: t("admin.feeIfCharge", {
+              <p className="text-sm text-slate-700">
+                <Trans
+                  i18nKey="admin.feeIfCharge"
+                  values={{
                     price: parseFormattedAmount(price, true).toLocaleString("es-CR"),
                     net: calculateNetAmount(parseFormattedAmount(price, true) || 0).toLocaleString("es-CR"),
-                  }),
-                }}
-              />
+                  }}
+                  components={{ strong: <strong /> }}
+                />
+              </p>
             )}
             <div className="flex flex-wrap items-end gap-2">
               <div className="flex-1 min-w-[140px]">
@@ -467,12 +469,12 @@ export function ProductFormContent({
               </div>
               {desiredNetInput && parseFormattedAmount(desiredNetInput, false) > 0 && (
                 <p className="text-sm text-slate-700 pb-1">
-                  <span
-                    dangerouslySetInnerHTML={{
-                      __html: t("admin.feeMustCharge", {
-                        price: calculateRequiredPrice(parseFormattedAmount(desiredNetInput, false) || 0).toLocaleString("es-CR"),
-                      }),
+                  <Trans
+                    i18nKey="admin.feeMustCharge"
+                    values={{
+                      price: calculateRequiredPrice(parseFormattedAmount(desiredNetInput, false) || 0).toLocaleString("es-CR"),
                     }}
+                    components={{ strong: <strong /> }}
                   />
                   <button
                     type="button"

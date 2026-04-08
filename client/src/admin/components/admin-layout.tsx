@@ -138,7 +138,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       </aside>
 
       {/* Main content */}
-      <main className="pt-20 lg:pt-8 lg:ml-56 px-4 sm:px-6 lg:px-8 pb-4 sm:pb-6 lg:pb-8 min-h-screen">
+      <main id="main-content" className="pt-20 lg:pt-8 lg:ml-56 px-4 sm:px-6 lg:px-8 pb-4 sm:pb-6 lg:pb-8 min-h-screen">
         <div className="max-w-6xl mx-auto w-full">
           {children}
         </div>

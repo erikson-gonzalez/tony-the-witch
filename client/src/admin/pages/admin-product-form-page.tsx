@@ -13,7 +13,7 @@ export function AdminProductFormPage() {
 
   const isNew = id === null || params.id === "new";
   const product = !isNew && id
-    ? (products as Array<Record<string, unknown>>).find((p) => p.id === id)
+    ? products.find((p) => p.id === id)
     : null;
 
   const handleSave = async (data: Record<string, unknown>) => {
