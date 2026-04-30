@@ -69,4 +69,7 @@ export const DEFAULT_SITE_CONFIG: SiteConfigData = {
     accountHolder: "",
     bankName: "",
   },
+  onvo: {
+    enabled: false,
+  },
 };

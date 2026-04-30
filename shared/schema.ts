@@ -8,7 +8,9 @@ import {
   numeric,
   jsonb,
   index,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -121,6 +123,11 @@ export const siteConfigDataSchema = z.object({
       phoneNumber: z.string(),
       accountHolder: z.string(),
       bankName: z.string().optional(),
+    })
+    .optional(),
+  onvo: z
+    .object({
+      enabled: z.boolean().default(false),
     })
     .optional(),
 });
@@ -252,7 +259,16 @@ export interface ShippingAddress {
   pais?: string;
 }
 
-export const PAYMENT_STATUSES = ["pending", "proof_submitted", "approved", "rejected"] as const;
+export const PAYMENT_STATUSES = [
+  "pending",            // legacy/manual SINPE: order created, awaiting proof
+  "proof_submitted",    // legacy/manual SINPE: proof uploaded, awaiting admin review
+  "awaiting_payment",   // ONVO: order created, intent not yet succeeded
+  "processing",         // ONVO: confirmed, awaiting webhook
+  "approved",           // terminal success
+  "rejected",           // terminal failure
+  "refunded",           // full refund issued
+  "partially_refunded", // partial refund issued
+] as const;
 export type PaymentStatus = (typeof PAYMENT_STATUSES)[number];
 
 export const orders = pgTable("orders", {
@@ -328,7 +344,7 @@ export const insertOrderSchema = z.object({
     .optional(),
   shippingZone: z.enum(["GAM", "NON_GAM", "INTERNATIONAL"]).optional(),
   shippingMethod: z.enum(["STANDARD", "NEXT_DAY", "A_CONVENIR"]).optional(),
-  paymentMethod: z.enum(["sinpe", "card"]),
+  paymentMethod: z.enum(["sinpe", "onvo_card"]),
 });
 
 export const paymentStatusSchema = z.enum(PAYMENT_STATUSES);
@@ -351,6 +367,136 @@ export const auditLogs = pgTable("audit_logs", {
 });
 
 export type AuditLog = typeof auditLogs.$inferSelect;
+
+// =============================================================================
+// PAYMENTS (ONVO Pay — one row per Payment Intent attempt)
+// =============================================================================
+// Manual SINPE orders do NOT have a payments row — they live entirely on
+// orders.paymentStatus with the existing pending|proof_submitted|approved|rejected flow.
+
+export const PAYMENT_PROVIDERS = ["onvo"] as const;
+export type PaymentProvider = (typeof PAYMENT_PROVIDERS)[number];
+
+export const PAYMENT_METHOD_TYPES = ["card"] as const;
+export type PaymentMethodType = (typeof PAYMENT_METHOD_TYPES)[number];
+
+export const PAYMENT_LIFECYCLE_STATES = [
+  "requires_payment_method",
+  "requires_action",
+  "processing",
+  "succeeded",
+  "failed",
+  "canceled",
+  "refunded",
+  "partially_refunded",
+] as const;
+export type PaymentLifecycleState = (typeof PAYMENT_LIFECYCLE_STATES)[number];
+
+export const payments = pgTable(
+  "payments",
+  {
+    id: serial("id").primaryKey(),
+    orderId: integer("order_id")
+      .notNull()
+      .references(() => orders.id),
+
+    provider: text("provider").notNull().$type<PaymentProvider>(),
+    providerIntentId: text("provider_intent_id"),
+    providerChargeId: text("provider_charge_id"),
+
+    methodType: text("method_type").notNull().$type<PaymentMethodType>(),
+    amountCents: integer("amount_cents").notNull(),
+    currency: text("currency").notNull(),
+
+    state: text("state")
+      .notNull()
+      .$type<PaymentLifecycleState>()
+      .default("requires_payment_method"),
+
+    failureCode: text("failure_code"),
+    failureMessage: text("failure_message"),
+
+    rawCreate: jsonb("raw_create"),
+    rawConfirm: jsonb("raw_confirm"),
+    rawLatestEvent: jsonb("raw_latest_event"),
+
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("payments_order_id_idx").on(table.orderId),
+    index("payments_provider_intent_idx").on(table.provider, table.providerIntentId),
+    index("payments_state_idx").on(table.state),
+    // App-side idempotency: only one active (non-terminal) payment per order.
+    // Concurrent intent-create attempts collide on this constraint.
+    uniqueIndex("payments_one_active_per_order")
+      .on(table.orderId)
+      .where(
+        sql`state IN ('requires_payment_method','requires_action','processing')`,
+      ),
+  ],
+);
+
+export type Payment = typeof payments.$inferSelect;
+
+// =============================================================================
+// WEBHOOK EVENTS (ONVO — idempotency log)
+// =============================================================================
+
+export const webhookEvents = pgTable(
+  "webhook_events",
+  {
+    id: serial("id").primaryKey(),
+    provider: text("provider").notNull().$type<PaymentProvider>(),
+    eventType: text("event_type").notNull(),
+    providerEventId: text("provider_event_id"),
+    // Composite dedup key: provider:eventType:providerEventId (or hash of body if no event id)
+    dedupKey: text("dedup_key").notNull().unique(),
+    payload: jsonb("payload").notNull(),
+    processedAt: timestamp("processed_at"),
+    processingError: text("processing_error"),
+    receivedAt: timestamp("received_at").defaultNow().notNull(),
+  },
+  (table) => [index("webhook_events_processed_idx").on(table.processedAt)],
+);
+
+export type WebhookEvent = typeof webhookEvents.$inferSelect;
+
+// =============================================================================
+// REFUNDS
+// =============================================================================
+
+export const REFUND_STATES = ["pending", "succeeded", "failed"] as const;
+export type RefundState = (typeof REFUND_STATES)[number];
+
+export const refunds = pgTable(
+  "refunds",
+  {
+    id: serial("id").primaryKey(),
+    paymentId: integer("payment_id")
+      .notNull()
+      .references(() => payments.id),
+    orderId: integer("order_id")
+      .notNull()
+      .references(() => orders.id),
+    provider: text("provider").notNull().$type<PaymentProvider>(),
+    providerRefundId: text("provider_refund_id"),
+    amountCents: integer("amount_cents").notNull(),
+    currency: text("currency").notNull(),
+    reason: text("reason"),
+    state: text("state").notNull().$type<RefundState>().default("pending"),
+    initiatedByUserId: integer("initiated_by_user_id").references(() => adminUsers.id),
+    raw: jsonb("raw"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => [
+    index("refunds_payment_idx").on(table.paymentId),
+    index("refunds_order_idx").on(table.orderId),
+  ],
+);
+
+export type Refund = typeof refunds.$inferSelect;
 
 // =============================================================================
 // ECLIPTIC DEBT (billing tracking)

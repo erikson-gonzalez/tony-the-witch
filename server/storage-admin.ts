@@ -385,7 +385,7 @@ export async function createOrder(
         shippingZone: input.shippingZone ?? null,
         shippingMethod: input.shippingMethod ?? null,
         paymentMethod: input.paymentMethod,
-        paymentStatus: input.paymentMethod === "card" ? "approved" : "pending",
+        paymentStatus: input.paymentMethod === "onvo_card" ? "awaiting_payment" : "pending",
       })
       .returning();
 
