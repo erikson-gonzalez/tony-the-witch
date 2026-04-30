@@ -176,9 +176,9 @@ describe("createPaymentIntent", () => {
     const sent = JSON.parse((init as RequestInit).body as string);
     expect(sent.amount).toBe(5000);
     expect(sent.currency).toBe("USD");
-    expect(sent.paymentMethodTypes).toEqual(["card"]);
     expect(sent.captureMethod).toBe("automatic");
     expect(sent.metadata).toEqual({ orderId: "42" });
+    expect(sent).not.toHaveProperty("paymentMethodTypes");
   });
 
   it("throws OnvoError with mapped code on 402 card_declined", async () => {

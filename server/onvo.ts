@@ -7,7 +7,9 @@ import { z } from "zod";
 const envSchema = z.object({
   ONVO_SECRET_KEY: z.string().min(1),
   ONVO_PUBLISHABLE_KEY: z.string().min(1),
-  ONVO_WEBHOOK_SECRET: z.string().min(1),
+  // Webhook secret only required by the webhook handler. Smoke tests / REST
+  // calls do not need it — keep optional so the wrapper boots without it.
+  ONVO_WEBHOOK_SECRET: z.string().min(1).optional(),
   ONVO_API_BASE_URL: z.string().url().default("https://api.onvopay.com"),
   ONVO_ENABLED: z
     .enum(["true", "false"])
@@ -215,14 +217,18 @@ async function onvoFetch<T>({
 // Types — loose by design; only fields we read are required.
 // =============================================================================
 
+// Real ONVO statuses (verified 2026-04-29 via openapi.yaml). Includes
+// `requires_capture` (manual capture flow) and refund terminal states.
 const PAYMENT_INTENT_STATUSES = [
   "requires_payment_method",
   "requires_action",
-  "requires_confirmation",
+  "requires_capture",
   "processing",
   "succeeded",
-  "canceled",
   "failed",
+  "canceled",
+  "refunded",
+  "partially_refunded",
 ] as const;
 export type OnvoIntentStatus = (typeof PAYMENT_INTENT_STATUSES)[number];
 
@@ -232,12 +238,15 @@ export const onvoPaymentIntentSchema = z
     status: z.string(),
     amount: z.number().optional(),
     currency: z.string().optional(),
-    clientSecret: z.string().optional(),
+    captureMethod: z.string().optional(),
+    mode: z.string().optional(),
     nextAction: z.unknown().optional(),
+    charges: z.array(z.unknown()).optional(),
     lastPaymentError: z
       .object({
         code: z.string().optional(),
         message: z.string().optional(),
+        type: z.string().optional(),
       })
       .nullish(),
   })
@@ -261,26 +270,37 @@ export type OnvoRefund = z.infer<typeof onvoRefundSchema>;
 // Public API
 // =============================================================================
 
+// ONVO supports more currencies (GTQ/NIO/PAB/PEN/MXN/COP/HNL); we only use
+// USD for cards. CRC reserved if we ever wire SINPE Móvil (out of v1 scope).
+export type OnvoCurrency = "USD" | "CRC";
+
 export interface CreatePaymentIntentInput {
-  amount: number; // cents
-  currency: "USD" | "CRC";
-  paymentMethodTypes?: ReadonlyArray<"card">;
+  amount: number; // smallest currency unit (cents for USD, colones for CRC)
+  currency: OnvoCurrency;
   captureMethod?: "automatic" | "manual";
   description?: string;
   metadata?: Record<string, string>;
+  receiptEmail?: string;
+  statementDescriptor?: string;
+  customer?: { name?: string; email?: string; phone?: string };
 }
 
 export async function createPaymentIntent(
   input: CreatePaymentIntentInput,
 ): Promise<OnvoPaymentIntent> {
-  const body = {
+  // Body intentionally omits unset fields — ONVO rejects unknown properties
+  // (e.g. `paymentMethodTypes` returns 400 "should not exist").
+  const body: Record<string, unknown> = {
     amount: input.amount,
     currency: input.currency,
-    paymentMethodTypes: input.paymentMethodTypes ?? ["card"],
     captureMethod: input.captureMethod ?? "automatic",
-    description: input.description,
-    metadata: input.metadata,
   };
+  if (input.description) body.description = input.description;
+  if (input.metadata) body.metadata = input.metadata;
+  if (input.receiptEmail) body.receiptEmail = input.receiptEmail;
+  if (input.statementDescriptor) body.statementDescriptor = input.statementDescriptor;
+  if (input.customer) body.customer = input.customer;
+
   const raw = await onvoFetch<unknown>({
     method: "POST",
     path: "/v1/payment-intents",
@@ -332,6 +352,11 @@ import { timingSafeEqual } from "crypto";
 export function verifyWebhookSignature(headerSecret: string | undefined): boolean {
   if (!headerSecret) return false;
   const expected = getOnvoEnv().ONVO_WEBHOOK_SECRET;
+  if (!expected) {
+    throw new OnvoConfigError(
+      "ONVO_WEBHOOK_SECRET is not set — cannot verify webhook signatures",
+    );
+  }
   const a = Buffer.from(headerSecret);
   const b = Buffer.from(expected);
   if (a.length !== b.length) return false;

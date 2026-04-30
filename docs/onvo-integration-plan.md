@@ -354,7 +354,7 @@ Untouched from current implementation. Customer chooses SINPE → uploads proof 
 
 ### 7.3 Changes to `admin-billing.tsx`
 
-- Add ONVO fee column to revenue calc (3.5% per ONVO docs, plus 2% retention if marketplace splits used — likely irrelevant for Tony)
+- Add ONVO fee column to revenue calc. **Real fees verified 2026-04-29 via sandbox `account.accountFees` (USD card):** 1.95% procesador (0.2% adquirencia + 1.75% emisión) + 1.95% ONVO (0.3% adquirencia + 1.65% servicios) + **$0.25 fixed** ($0.13 ONVO + $0.12 adquirente) = **~3.9% + $0.25 per txn**. Higher than plan's original 3.5% estimate.
 - Net revenue = gross − ONVO fees − refunds
 
 ### 7.4 New admin page: `admin-webhook-events.tsx`
