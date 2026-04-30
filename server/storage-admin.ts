@@ -333,8 +333,14 @@ export async function createOrder(
     usdToCrcRate: number;
   },
 ): Promise<Order> {
+  // For onvo_card: stock is held but NOT decremented at order create.
+  // The webhook handler decrements on `succeeded` to avoid holding inventory
+  // for unconfirmed cards. We still validate availability here so the customer
+  // doesn't enter the SDK flow on an out-of-stock item.
+  const decrementStock = input.paymentMethod !== "onvo_card";
+
   return await db.transaction(async (trx) => {
-    // 1. Validate and deduct stock for non-reservation items
+    // 1. Validate and (for SINPE) deduct stock for non-reservation items
     for (const item of input.items) {
       if (item.isReservation) continue;
 
@@ -353,13 +359,14 @@ export async function createOrder(
         );
       }
 
-      // Deduct stock
-      const stockUpdates = adjustStock(product, item, -1);
-      if (Object.keys(stockUpdates).length > 0) {
-        await trx
-          .update(products)
-          .set(stockUpdates)
-          .where(eq(products.id, item.productId));
+      if (decrementStock) {
+        const stockUpdates = adjustStock(product, item, -1);
+        if (Object.keys(stockUpdates).length > 0) {
+          await trx
+            .update(products)
+            .set(stockUpdates)
+            .where(eq(products.id, item.productId));
+        }
       }
     }
 

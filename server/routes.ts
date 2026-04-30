@@ -26,6 +26,11 @@ import {
   StockError,
 } from "./storage-admin";
 import { uploadMedia } from "./cloudinary";
+import {
+  createOrFindActivePayment,
+  PaymentNotAllowedError,
+} from "./payments-storage";
+import { getOnvoEnv, isOnvoConfigured, OnvoError } from "./onvo";
 
 const inquiryLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -152,13 +157,16 @@ export async function registerRoutes(
         usdToCrcRate: usdToCrc,
       });
 
-      // Fire-and-forget email notifications
-      sendOrderNotificationToAdmin(order).catch((err) =>
-        console.error("[email] Unexpected:", err instanceof Error ? err.message : "Unknown error")
-      );
-      sendOrderConfirmationToCustomer(order).catch((err) =>
-        console.error("[email] Unexpected:", err instanceof Error ? err.message : "Unknown error")
-      );
+      // Defer emails for ONVO card orders until the webhook confirms payment;
+      // otherwise customers/admin get a "new order" email for an unpaid intent.
+      if (order.paymentMethod !== "onvo_card") {
+        sendOrderNotificationToAdmin(order).catch((err) =>
+          console.error("[email] Unexpected:", err instanceof Error ? err.message : "Unknown error")
+        );
+        sendOrderConfirmationToCustomer(order).catch((err) =>
+          console.error("[email] Unexpected:", err instanceof Error ? err.message : "Unknown error")
+        );
+      }
 
       res.status(201).json({
         id: order.id,
@@ -318,6 +326,76 @@ export async function registerRoutes(
     legacyHeaders: false,
     message: { message: "Demasiados intentos. Intentá de nuevo en unos minutos." },
   });
+
+  // ONVO Pay: create or reuse a payment intent for an existing order.
+  app.post(
+    api.payments.createOnvoIntent.path,
+    orderLimiter,
+    async (req, res) => {
+      try {
+        const input = api.payments.createOnvoIntent.input.parse(req.body);
+
+        if (!isOnvoConfigured()) {
+          return res
+            .status(403)
+            .json({ message: "ONVO Pay is not enabled on this server" });
+        }
+
+        const config = await getSiteConfig();
+        if (config.onvo?.enabled !== true) {
+          return res
+            .status(403)
+            .json({ message: "ONVO Pay is currently disabled" });
+        }
+
+        const orderRow = await getOrderById(input.orderId);
+        // Same 404 whether order missing or email mismatch (anti-enumeration).
+        if (
+          !orderRow ||
+          orderRow.customerEmail.toLowerCase() !== input.customerEmail.toLowerCase()
+        ) {
+          return res.status(404).json({ message: "Pedido no encontrado" });
+        }
+
+        const { payment } = await createOrFindActivePayment(input.orderId);
+
+        if (!payment.providerIntentId) {
+          return res.status(500).json({ message: "Intent missing provider id" });
+        }
+
+        const env = getOnvoEnv();
+        return res.json({
+          paymentIntentId: payment.providerIntentId,
+          publishableKey: env.ONVO_PUBLISHABLE_KEY,
+          status: payment.state,
+        });
+      } catch (err) {
+        if (err instanceof z.ZodError) {
+          return res.status(400).json({
+            message: err.errors[0].message,
+            field: err.errors[0].path.join("."),
+          });
+        }
+        if (err instanceof PaymentNotAllowedError) {
+          const status = err.reason === "order_not_found" ? 404 : 409;
+          return res.status(status).json({ message: err.message, reason: err.reason });
+        }
+        if (err instanceof OnvoError) {
+          console.error(
+            `POST /api/payments/onvo/intents: ONVO ${err.code} ${err.httpStatus} ${err.providerMessage}`,
+          );
+          return res
+            .status(502)
+            .json({ message: "Could not contact payment provider", code: err.code });
+        }
+        console.error(
+          "POST /api/payments/onvo/intents:",
+          err instanceof Error ? err.message : "Unknown error",
+        );
+        return res.status(500).json({ message: "Internal server error" });
+      }
+    },
+  );
 
   app.get("/api/orders/:orderNumber/status", orderStatusLimiter, async (req, res) => {
     try {

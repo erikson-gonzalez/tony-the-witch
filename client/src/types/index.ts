@@ -1,4 +1,12 @@
-export type CheckoutStep = "cart" | "info" | "payment_method" | "payment" | "sinpe_instructions" | "sinpe_proof" | "processing" | "confirmed";
+export type CheckoutStep =
+  | "cart"
+  | "info"
+  | "payment_method"
+  | "payment"          // ONVO SDK mount step
+  | "sinpe_instructions"
+  | "sinpe_proof"
+  | "processing"
+  | "confirmed";
 
 export type ShippingZone = "GAM" | "NON_GAM" | "INTERNATIONAL";
 export type ShippingMethod = "STANDARD" | "NEXT_DAY" | "A_CONVENIR";
@@ -23,14 +31,7 @@ export interface CheckoutForm {
   /** Discount/promo code */
   discountCode?: string;
   /** Payment method */
-  paymentMethod?: "sinpe" | "card";
-}
-
-export interface CardForm {
-  number: string;
-  expiry: string;
-  cvc: string;
-  holder: string;
+  paymentMethod?: "sinpe" | "onvo_card";
 }
 
 export interface NavCard {

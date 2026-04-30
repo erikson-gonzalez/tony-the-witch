@@ -73,6 +73,7 @@
     "note": "Note (optional)",
     "notePlaceholder": "Any special requests, additional instructions...",
     "securePayment": "Secure payment",
+    "preparingPayment": "Preparing payment...",
     "cardNumber": "Card number",
     "holder": "Cardholder name",
     "holderPlaceholder": "Name on card",

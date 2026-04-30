@@ -1,6 +1,11 @@
 import { useState, useCallback } from "react";
-import type { CheckoutStep, CheckoutForm, CardForm } from "@/types";
+import type { CheckoutStep, CheckoutForm } from "@/types";
 import type { CartItem } from "@/lib/cart";
+
+export interface OnvoIntent {
+  paymentIntentId: string;
+  publishableKey: string;
+}
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -22,12 +27,12 @@ export function useCheckout(
 ) {
   const [step, setStep] = useState<CheckoutStep>("cart");
   const [form, setForm] = useState<CheckoutForm>(defaultForm);
-  const [card, setCard] = useState<CardForm>({ number: "", expiry: "", cvc: "", holder: "" });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [orderId, setOrderId] = useState<number | null>(null);
   const [orderNumber, setOrderNumber] = useState<string | null>(null);
   const [orderTotalCrc, setOrderTotalCrc] = useState<number>(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [onvoIntent, setOnvoIntent] = useState<OnvoIntent | null>(null);
 
   const goToStep = useCallback((newStep: CheckoutStep) => {
     setStep(newStep);
@@ -52,15 +57,6 @@ export function useCheckout(
       }
       return next;
     });
-    setFormErrors((prev) => {
-      const next = { ...prev };
-      Object.keys(updates).forEach((key) => delete next[key]);
-      return next;
-    });
-  }, []);
-
-  const updateCard = useCallback((updates: Partial<CardForm>) => {
-    setCard((prev) => ({ ...prev, ...updates }));
     setFormErrors((prev) => {
       const next = { ...prev };
       Object.keys(updates).forEach((key) => delete next[key]);
@@ -116,7 +112,7 @@ export function useCheckout(
     needsShipping,
   ]);
 
-  const createOrder = useCallback(async (paymentMethod: "sinpe" | "card"): Promise<boolean> => {
+  const createOrder = useCallback(async (paymentMethod: "sinpe" | "onvo_card"): Promise<boolean> => {
     if (orderId) return true;
     setIsSubmitting(true);
     try {
@@ -203,16 +199,53 @@ export function useCheckout(
     }
   }, [orderId, items, form, needsShipping]);
 
-  const selectPaymentMethod = useCallback(async (method: "sinpe" | "card") => {
+  const fetchOnvoIntent = useCallback(async (
+    orderIdToUse: number,
+    customerEmail: string,
+  ): Promise<OnvoIntent | null> => {
+    try {
+      const res = await fetch("/api/payments/onvo/intents", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId: orderIdToUse, customerEmail }),
+      });
+      if (!res.ok) {
+        const data = (await res.json().catch(() => ({}))) as { message?: string };
+        setFormErrors({
+          _api:
+            data.message ?? "No se pudo iniciar el pago con tarjeta. Intentá de nuevo.",
+        });
+        return null;
+      }
+      const data = (await res.json()) as OnvoIntent;
+      setOnvoIntent(data);
+      return data;
+    } catch {
+      setFormErrors({ _api: "Error de conexión iniciando el pago." });
+      return null;
+    }
+  }, []);
+
+  const selectPaymentMethod = useCallback(async (method: "sinpe" | "onvo_card") => {
     setForm((prev) => ({ ...prev, paymentMethod: method }));
 
     if (method === "sinpe") {
       const success = await createOrder("sinpe");
       if (success) setStep("sinpe_instructions");
-    } else {
-      setStep("payment");
+      return;
     }
+
+    const orderOk = await createOrder("onvo_card");
+    if (orderOk) setStep("payment");
   }, [createOrder]);
+
+  // The payment step mounts and calls this to fetch the intent lazily, after
+  // useState commits orderId from the order-create response.
+  const ensureOnvoIntent = useCallback(async (): Promise<OnvoIntent | null> => {
+    if (onvoIntent) return onvoIntent;
+    if (!orderId) return null;
+    return await fetchOnvoIntent(orderId, form.email);
+  }, [onvoIntent, orderId, form.email, fetchOnvoIntent]);
 
   const submitProof = useCallback(async (proofUrl: string, transactionRef?: string): Promise<boolean> => {
     if (!orderId) return false;
@@ -237,47 +270,70 @@ export function useCheckout(
     }
   }, [orderId, onPaymentComplete]);
 
-  const validatePayment = useCallback(async (): Promise<boolean> => {
-    const errors: Record<string, string> = {};
-    const digits = card.number.replace(/\D/g, "");
-
-    if (digits.length < 16) errors.number = "Enter a valid card number";
-    if (!card.holder.trim()) errors.holder = "Cardholder name is required";
-
-    const expiryDigits = card.expiry.replace(/\D/g, "");
-    if (expiryDigits.length < 4) errors.expiry = "Enter a valid expiry";
-    if (card.cvc.replace(/\D/g, "").length < 3) errors.cvc = "Enter a valid CVC";
-
-    setFormErrors(errors);
-    if (Object.keys(errors).length > 0) return false;
-
+  // Called by the SDK's onSuccess callback. Polls the order status endpoint
+  // until the webhook flips the order to `approved`, then advances the UI.
+  const onCardPaymentSuccess = useCallback(async () => {
     setStep("processing");
+    onPaymentComplete();
 
-    const success = await createOrder("card");
-    if (success) {
-      onPaymentComplete();
+    if (!orderNumber) {
       setStep("confirmed");
-    } else {
-      setStep("payment");
+      return;
     }
-    return true;
-  }, [card, onPaymentComplete, createOrder]);
+
+    const start = Date.now();
+    const POLL_TIMEOUT_MS = 30_000;
+    const POLL_INTERVAL_MS = 1_500;
+
+    while (Date.now() - start < POLL_TIMEOUT_MS) {
+      try {
+        const res = await fetch(
+          `/api/orders/${encodeURIComponent(orderNumber)}/status?email=${encodeURIComponent(form.email)}`,
+        );
+        if (res.ok) {
+          const data = (await res.json()) as { paymentStatus?: string };
+          if (
+            data.paymentStatus === "approved" ||
+            data.paymentStatus === "processing"
+          ) {
+            setStep("confirmed");
+            return;
+          }
+        }
+      } catch {
+        // ignore transient errors during polling
+      }
+      await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
+    }
+
+    // Webhook didn't fire in time — still show confirmation; admin will see
+    // the order via the webhook eventually.
+    setStep("confirmed");
+  }, [orderNumber, form.email, onPaymentComplete]);
+
+  const onCardPaymentError = useCallback((message?: string) => {
+    setFormErrors({
+      _api: message ?? "El pago con tarjeta falló. Intentá de nuevo.",
+    });
+    setStep("payment");
+  }, []);
 
   return {
     step,
     form,
-    card,
     formErrors,
     orderId,
     orderNumber,
     orderTotalCrc,
+    onvoIntent,
     isSubmitting,
     goToStep,
     updateForm,
-    updateCard,
     validateInfo,
-    validatePayment,
     selectPaymentMethod,
+    ensureOnvoIntent,
+    onCardPaymentSuccess,
+    onCardPaymentError,
     submitProof,
   };
 }

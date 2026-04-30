@@ -75,6 +75,28 @@ export const api = {
       },
     },
   },
+  payments: {
+    createOnvoIntent: {
+      method: 'POST' as const,
+      path: '/api/payments/onvo/intents' as const,
+      input: z.object({
+        orderId: z.number().int().positive(),
+        customerEmail: z.string().email(),
+      }),
+      responses: {
+        200: z.object({
+          paymentIntentId: z.string(),
+          publishableKey: z.string(),
+          status: z.string(),
+        }),
+        400: errorSchemas.validation,
+        403: errorSchemas.internal,
+        404: errorSchemas.internal,
+        409: errorSchemas.internal,
+        500: errorSchemas.internal,
+      },
+    },
+  },
 };
 
 export function buildUrl(path: string, params?: Record<string, string | number>): string {

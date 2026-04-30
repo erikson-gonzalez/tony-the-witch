@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next";
 interface PaymentMethodSelectProps {
   isSubmitting: boolean;
   error?: string;
-  onSelect: (method: "sinpe" | "card") => void;
+  onSelect: (method: "sinpe" | "onvo_card") => void;
   onBack: () => void;
 }
 
@@ -17,7 +17,7 @@ export function PaymentMethodSelect({
   onBack,
 }: PaymentMethodSelectProps) {
   const { t } = useTranslation();
-  const [selected, setSelected] = useState<"sinpe" | "card" | null>(null);
+  const [selected, setSelected] = useState<"sinpe" | "onvo_card" | null>(null);
 
   return (
     <motion.div
@@ -33,9 +33,9 @@ export function PaymentMethodSelect({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
         <button
-          onClick={() => setSelected("card")}
+          onClick={() => setSelected("onvo_card")}
           className={`p-6 border text-left transition-all ${
-            selected === "card"
+            selected === "onvo_card"
               ? "border-amber-400 bg-amber-400/5"
               : "border-white/20 hover:border-white/40"
           }`}

@@ -73,6 +73,7 @@
     "note": "Nota (opcional)",
     "notePlaceholder": "Cualquier solicitud especial, instrucciones adicionales...",
     "securePayment": "Pago seguro",
+    "preparingPayment": "Preparando el pago...",
     "cardNumber": "Número de tarjeta",
     "holder": "Nombre en la tarjeta",
     "holderPlaceholder": "Nombre como aparece en la tarjeta",

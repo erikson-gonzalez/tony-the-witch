@@ -7,7 +7,7 @@ import { needsShipping, getShippingCost, isCustomSession } from "@/utils/shippin
 import {
   CartItemsList,
   CheckoutInfoStep,
-  CheckoutPaymentStep,
+  CheckoutOnvoStep,
   CheckoutProcessingStep,
   CheckoutConfirmedStep,
   CheckoutStepsIndicator,
@@ -42,17 +42,18 @@ export default function Cart() {
   const {
     step,
     form,
-    card,
     formErrors,
     orderNumber,
     orderTotalCrc,
+    onvoIntent,
     isSubmitting,
     goToStep,
     updateForm,
-    updateCard,
     validateInfo,
-    validatePayment,
     selectPaymentMethod,
+    ensureOnvoIntent,
+    onCardPaymentSuccess,
+    onCardPaymentError,
     submitProof,
   } = useCheckout(clearCart, needsShipping(items), items, totalPrice);
 
@@ -206,8 +207,9 @@ export default function Cart() {
             )}
 
             {step === "payment" && (
-              <CheckoutPaymentStep
-                card={card}
+              <CheckoutOnvoStep
+                intent={onvoIntent}
+                ensureIntent={ensureOnvoIntent}
                 totalPrice={totalPrice}
                 locale={i18n.language}
                 usdToCrc={usdToCrc}
@@ -231,11 +233,11 @@ export default function Cart() {
                 shippingToConvenir={
                   needsShipping(items) && form.shippingZone === "INTERNATIONAL"
                 }
-                formErrors={formErrors}
                 hasReservation={items.some((i) => i.isReservation)}
                 hasCustomSession={items.some((i) => isCustomSession(i))}
-                onUpdateCard={updateCard}
-                onValidate={validatePayment}
+                formErrors={formErrors}
+                onSuccess={onCardPaymentSuccess}
+                onError={onCardPaymentError}
                 onBack={() => goToStep("payment_method")}
               />
             )}
