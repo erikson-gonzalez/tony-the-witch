@@ -344,6 +344,11 @@ export async function createOrder(
   // doesn't enter the SDK flow on an out-of-stock item.
   const decrementStock = input.paymentMethod !== "onvo_card";
 
+  // Generate order number BEFORE opening the transaction. Sequences are
+  // tx-independent, and on Vercel the pg pool has max=1 — calling db.* from
+  // inside a tx deadlocks the function.
+  const orderNumber = await getNextOrderNumber();
+
   return await db.transaction(async (trx) => {
     // 1. Validate and (for SINPE) deduct stock for non-reservation items
     for (const item of input.items) {
@@ -375,10 +380,7 @@ export async function createOrder(
       }
     }
 
-    // 2. Generate order number (sequence is atomic, safe outside transaction)
-    const orderNumber = await getNextOrderNumber();
-
-    // 3. Insert order
+    // 2. Insert order
     const [order] = await trx
       .insert(orders)
       .values({
