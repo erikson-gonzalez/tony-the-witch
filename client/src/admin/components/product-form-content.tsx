@@ -439,7 +439,7 @@ export function ProductFormContent({
           {/* Fee calculator */}
           <div className="mt-4 p-3 rounded-lg bg-slate-100 border border-slate-200 space-y-3">
             <p className="text-xs font-medium text-slate-600 flex items-center gap-1">
-              <span>{t("admin.feeCalculator", { paypal: FEE_LABELS.paypal, platform: FEE_LABELS.platform })}</span>
+              <span>{t("admin.feeCalculator", { onvo: FEE_LABELS.onvo, iva: FEE_LABELS.iva })}</span>
             </p>
             {price && parseFormattedAmount(price, true) > 0 && (
               <p className="text-sm text-slate-700">

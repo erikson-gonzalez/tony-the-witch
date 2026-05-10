@@ -387,7 +387,7 @@
     "selectCategory": "Seleccionar categoría",
     "priceCrc": "Precio (CRC)",
     "priceHint": "El precio se ingresa en colones. La conversión usa 1 USD = 500 colones (configurable en Configuración del sitio → Precios).",
-    "feeCalculator": "Comisiones: PayPal {{paypal}} + Plataforma {{platform}}",
+    "feeCalculator": "Comisiones: ONVO {{onvo}} + IVA {{iva}}",
     "feeIfCharge": "Si cobras <strong>₡{{price}}</strong> → Recibes aprox: <strong>₡{{net}}</strong>",
     "feeDesiredNet": "Quiero recibir ₡",
     "feeMustCharge": "Debe cobrar: <strong>₡{{price}}</strong>",

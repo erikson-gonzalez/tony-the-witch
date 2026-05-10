@@ -1,9 +1,9 @@
-const PAYPAL_FEE = 0.08;
-const PLATFORM_FEE = 0.05;
-const TOTAL_FEE = PAYPAL_FEE + PLATFORM_FEE;
-const NET_MULTIPLIER = 1 - TOTAL_FEE; // 0.87
+const ONVO_FEE = 0.038;
+const IVA = 0.13;
+const TOTAL_FEE = ONVO_FEE + IVA;
+const NET_MULTIPLIER = 1 - TOTAL_FEE; // 0.832
 
-/** Neto que recibe el comercio (después de comisiones) */
+/** Neto que recibe el comercio (después de comisiones e IVA) */
 export function calculateNetAmount(price: number): number {
   return Math.round(price * NET_MULTIPLIER);
 }
@@ -14,7 +14,7 @@ export function calculateRequiredPrice(desiredNet: number): number {
 }
 
 export const FEE_LABELS = {
-  paypal: "8% aprox.",
-  platform: "5%",
-  total: "13%",
+  onvo: "3.8%",
+  iva: "13%",
+  total: "16.8%",
 } as const;
