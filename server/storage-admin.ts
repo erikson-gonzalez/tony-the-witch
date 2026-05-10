@@ -294,17 +294,22 @@ let sequenceInitialized = false;
 
 async function ensureOrderSequence(): Promise<void> {
   if (sequenceInitialized) return;
+  // Empty orders table → MAX is NULL. setval requires value >= 1.
+  // Use is_called=false so the first nextval() returns 1 cleanly.
   await db.execute(sql`
     DO $$
+    DECLARE
+      max_num INT;
     BEGIN
       IF NOT EXISTS (SELECT 1 FROM pg_class WHERE relname = 'order_number_seq') THEN
         CREATE SEQUENCE order_number_seq;
-        PERFORM setval('order_number_seq',
-          COALESCE(
-            (SELECT MAX(CAST(REPLACE(order_number, 'TTW-', '') AS INT)) FROM orders),
-            0
-          )
-        );
+        SELECT MAX(CAST(REPLACE(order_number, 'TTW-', '') AS INT))
+          INTO max_num FROM orders;
+        IF max_num IS NULL OR max_num < 1 THEN
+          PERFORM setval('order_number_seq', 1, false);
+        ELSE
+          PERFORM setval('order_number_seq', max_num, true);
+        END IF;
       END IF;
     END
     $$;
@@ -441,10 +446,20 @@ export async function listOrders(filters?: {
   if (filters?.status) {
     if (filters.status === "pending") {
       query = query.where(
-        inArray(orders.paymentStatus, ["pending", "proof_submitted"]),
+        inArray(orders.paymentStatus, [
+        "pending",
+        "proof_submitted",
+        "awaiting_payment",
+        "processing",
+      ]),
       ) as typeof query;
       countQuery = countQuery.where(
-        inArray(orders.paymentStatus, ["pending", "proof_submitted"]),
+        inArray(orders.paymentStatus, [
+        "pending",
+        "proof_submitted",
+        "awaiting_payment",
+        "processing",
+      ]),
       ) as typeof countQuery;
     } else {
       query = query.where(
@@ -547,7 +562,14 @@ export async function getPendingOrderCount(): Promise<number> {
   const [row] = await db
     .select({ count: sql<number>`count(*)` })
     .from(orders)
-    .where(inArray(orders.paymentStatus, ["pending", "proof_submitted"]));
+    .where(
+      inArray(orders.paymentStatus, [
+        "pending",
+        "proof_submitted",
+        "awaiting_payment",
+        "processing",
+      ]),
+    );
   return Number(row?.count ?? 0);
 }
 

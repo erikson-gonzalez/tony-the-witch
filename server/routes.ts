@@ -31,6 +31,7 @@ import {
   PaymentNotAllowedError,
 } from "./payments-storage";
 import { getOnvoEnv, isOnvoConfigured, OnvoError } from "./onvo";
+import { onvoWebhookHandler } from "./onvo-webhook";
 
 const inquiryLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -318,14 +319,18 @@ export async function registerRoutes(
     }
   });
 
-  // Public order status (requires email verification to prevent enumeration)
+  // Public order status (email-gated, anti-enumeration). Used by post-payment
+  // polling — limit is per-minute (not per-15min) so legitimate polling fits.
   const orderStatusLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 10,
+    windowMs: 60 * 1000,
+    max: 30,
     standardHeaders: true,
     legacyHeaders: false,
     message: { message: "Demasiados intentos. Intentá de nuevo en unos minutos." },
   });
+
+  // ONVO webhook — bypasses CSRF and rate limiter. Idempotent via webhook_events.
+  app.post("/api/webhooks/onvo", onvoWebhookHandler);
 
   // ONVO Pay: create or reuse a payment intent for an existing order.
   app.post(

@@ -98,10 +98,12 @@ export async function createOrFindActivePayment(
       amount: orderRow.total_usd, // already cents
       currency: "USD",
       description: `Tony The Witch order #${orderId}`,
-      metadata: { orderId: String(orderId) },
-      customer: {
-        name: orderRow.customer_name,
-        email: orderRow.customer_email,
+      // ONVO does not accept a `customer` object on the intent (only customerId).
+      // Carry contact via metadata for now; saved-card / Customer is deferred.
+      metadata: {
+        orderId: String(orderId),
+        customerName: orderRow.customer_name,
+        customerEmail: orderRow.customer_email,
       },
     });
 

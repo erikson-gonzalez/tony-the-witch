@@ -23,8 +23,8 @@ app.use(
       directives: {
         defaultSrc: ["'self'"],
         scriptSrc: isDev
-          ? ["'self'", "'unsafe-inline'", "'unsafe-eval'"]
-          : ["'self'"],
+          ? ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://sdk.onvopay.com"]
+          : ["'self'", "https://sdk.onvopay.com"],
         styleSrc: [
           "'self'",
           "'unsafe-inline'",
@@ -35,16 +35,25 @@ app.use(
           "data:",
           "https://res.cloudinary.com",
           "https://images.unsplash.com",
+          "https://*.onvopay.com",
         ],
         mediaSrc: ["'self'", "https://res.cloudinary.com"],
         fontSrc: [
           "'self'",
           "https://fonts.googleapis.com",
           "https://fonts.gstatic.com",
+          "https://sdk.onvopay.com",
         ],
         connectSrc: isDev
-          ? ["'self'", "ws:", "wss:"]
-          : ["'self'"],
+          ? [
+              "'self'",
+              "ws:",
+              "wss:",
+              "https://api.onvopay.com",
+              "https://*.onvopay.com",
+            ]
+          : ["'self'", "https://api.onvopay.com", "https://*.onvopay.com"],
+        frameSrc: ["'self'", "https://*.onvopay.com"],
       },
     },
     crossOriginEmbedderPolicy: !isDev,

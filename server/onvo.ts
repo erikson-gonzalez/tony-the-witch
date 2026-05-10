@@ -282,7 +282,10 @@ export interface CreatePaymentIntentInput {
   metadata?: Record<string, string>;
   receiptEmail?: string;
   statementDescriptor?: string;
-  customer?: { name?: string; email?: string; phone?: string };
+  // Note: ONVO API rejects a `customer` object on intent create
+  // ("property customer should not exist"). Use customerId for an
+  // existing Customer, or pass contact via metadata.
+  customerId?: string;
 }
 
 export async function createPaymentIntent(
@@ -299,7 +302,7 @@ export async function createPaymentIntent(
   if (input.metadata) body.metadata = input.metadata;
   if (input.receiptEmail) body.receiptEmail = input.receiptEmail;
   if (input.statementDescriptor) body.statementDescriptor = input.statementDescriptor;
-  if (input.customer) body.customer = input.customer;
+  if (input.customerId) body.customerId = input.customerId;
 
   const raw = await onvoFetch<unknown>({
     method: "POST",
