@@ -9,5 +9,8 @@ vite.config.ts.*
 api/index.js
 api/index.mjs
 .vercel
-.claude/commands
+.claude/
 tasks/
+script/cleanup-orphan-orders.ts
+script/list-payments.ts
+script/onvo-enable.ts
