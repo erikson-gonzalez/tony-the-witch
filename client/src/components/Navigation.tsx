@@ -8,7 +8,7 @@ import { useContent } from "@/hooks/use-content";
 import { useTranslation } from "react-i18next";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 
-const FALLBACK_WHATSAPP = "https://wa.me/1234567890";
+const FALLBACK_WHATSAPP = "https://wa.me/50671280996";
 const FALLBACK_INSTAGRAM = "https://instagram.com/tonythewitch";
 
 export function Navigation() {

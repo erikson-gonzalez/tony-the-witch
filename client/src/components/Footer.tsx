@@ -6,7 +6,7 @@ const FALLBACK = {
   imageUrl:
     "https://images.unsplash.com/photo-1611501275019-9b5cda994e8d?q=80&w=1600&auto=format&fit=crop",
   ctaText: "Let's Talk",
-  whatsappUrl: "https://wa.me/1234567890",
+  whatsappUrl: "https://wa.me/50671280996",
   brandText: "TTW",
   copyrightText: "Tony the Witch",
   eclipticUrl: "https://eclipticsolutions.com",

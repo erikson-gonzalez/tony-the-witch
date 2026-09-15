@@ -19,7 +19,7 @@ export const DEFAULT_SITE_CONFIG: SiteConfigData = {
     imageUrl:
       "https://images.unsplash.com/photo-1611501275019-9b5cda994e8d?q=80&w=1600&auto=format&fit=crop",
     ctaText: "Let's Talk",
-    whatsappUrl: "https://wa.me/1234567890",
+    whatsappUrl: "https://wa.me/50671280996",
     brandText: "TTW",
     copyrightText: "Tony the Witch",
     eclipticUrl: "https://eclipticsolutions.com",
@@ -31,7 +31,7 @@ export const DEFAULT_SITE_CONFIG: SiteConfigData = {
       "Please fill out the form below with your ideas. I am currently booking for next month.",
   },
   contact: {
-    whatsappUrl: "https://wa.me/1234567890",
+    whatsappUrl: "https://wa.me/50671280996",
     instagramUrl: "https://instagram.com/tonythewitch",
   },
   meta: {

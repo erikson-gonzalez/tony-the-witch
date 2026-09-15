@@ -18,7 +18,7 @@ export const navCards: NavCard[] = [
   {
     title: "Contact",
     subtitle: "WhatsApp",
-    href: "https://wa.me/1234567890",
+    href: "https://wa.me/50671280996",
     external: true,
     image: "https://images.unsplash.com/photo-1568515045052-f9a854d70bfd?q=80&w=800&auto=format&fit=crop",
   },
