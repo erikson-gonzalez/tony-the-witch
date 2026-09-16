@@ -116,7 +116,9 @@
     "errorCreateOrder": "Error al crear pedido. Intentá de nuevo.",
     "errorConnection": "Error de conexión. Intentá de nuevo.",
     "errorUpload": "Error al subir la imagen. Intentá de nuevo.",
-    "errorSubmitProof": "Error al enviar comprobante. Intentá de nuevo."
+    "errorSubmitProof": "Error al enviar comprobante. Intentá de nuevo.",
+    "sinpeUploadLater": "Subir el comprobante después (te enviaremos un enlace por correo)",
+    "sinpeSubmitting": "Enviando…"
   },
   "product": {
     "addToCart": "Agregar al carrito",

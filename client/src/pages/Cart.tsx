@@ -13,7 +13,6 @@ import {
   CheckoutStepsIndicator,
   PaymentMethodSelect,
   SinpeInstructionsStep,
-  SinpeProofUploadStep,
   SinpeConfirmedStep,
 } from "@/components/cart";
 import { useCheckout } from "@/hooks/use-checkout";
@@ -247,15 +246,9 @@ export default function Cart() {
                 sinpePhone={sinpeConfig?.phoneNumber ?? ""}
                 sinpeAccountHolder={sinpeConfig?.accountHolder ?? ""}
                 sinpeBankName={sinpeConfig?.bankName}
-                onContinue={() => goToStep("sinpe_proof")}
-              />
-            )}
-
-            {step === "sinpe_proof" && (
-              <SinpeProofUploadStep
                 isSubmitting={isSubmitting}
                 onSubmitProof={submitProof}
-                onBack={() => goToStep("sinpe_instructions")}
+                onSkip={() => goToStep("confirmed")}
               />
             )}
 

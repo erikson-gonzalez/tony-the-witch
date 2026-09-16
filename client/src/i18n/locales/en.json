@@ -116,7 +116,9 @@
     "errorCreateOrder": "Error creating order. Please try again.",
     "errorConnection": "Connection error. Please try again.",
     "errorUpload": "Error uploading image. Please try again.",
-    "errorSubmitProof": "Error submitting proof. Please try again."
+    "errorSubmitProof": "Error submitting proof. Please try again.",
+    "sinpeUploadLater": "Upload the receipt later (we will email you a link)",
+    "sinpeSubmitting": "Sending…"
   },
   "product": {
     "addToCart": "Add to Cart",
