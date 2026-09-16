@@ -43,7 +43,19 @@ const inquiryLimiter = rateLimit({
 
 const orderLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 3,
+  max: 8,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: "Demasiadas solicitudes. Intentá de nuevo en unos minutos." },
+});
+
+// Separate, looser limiter for payment-intent creation: the endpoint is
+// idempotent (reuses the active intent) and a normal checkout with a card
+// retry or 3DS bounce can hit it several times. Sharing orderLimiter's
+// max:3 with order creation locked customers out mid-checkout (429).
+const intentLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
   standardHeaders: true,
   legacyHeaders: false,
   message: { message: "Demasiadas solicitudes. Intentá de nuevo en unos minutos." },
@@ -336,7 +348,7 @@ export async function registerRoutes(
   // ONVO Pay: create or reuse a payment intent for an existing order.
   app.post(
     api.payments.createOnvoIntent.path,
-    orderLimiter,
+    intentLimiter,
     async (req, res) => {
       try {
         const input = api.payments.createOnvoIntent.input.parse(req.body);
