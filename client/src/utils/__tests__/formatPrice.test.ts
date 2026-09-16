@@ -8,59 +8,43 @@ const CRC_30K = /^₡30[\s,]000$/;
 const CRC_25287 = /^₡25[\s,]287$/;
 const CRC_2500 = /^₡2[\s,]500$/;
 
-describe("formatPrice (input is colones)", () => {
-  it("shows colones directly for Spanish locale", () => {
+describe("formatPrice (always colones)", () => {
+  it("shows colones for Spanish locale", () => {
     expect(formatPrice(30000, "es")).toMatch(CRC_30K);
     expect(formatPrice(25287, "es")).toMatch(CRC_25287);
   });
 
-  it("converts to USD for English locale at default rate", () => {
-    // 30000 / 500 = 60
-    expect(formatPrice(30000, "en")).toBe("$60 USD");
+  it("shows colones for English locale too", () => {
+    expect(formatPrice(30000, "en")).toMatch(CRC_30K);
+    expect(formatPrice(25287, "en-US")).toMatch(CRC_25287);
   });
 
-  it("shows cents in USD when conversion is not whole", () => {
-    // 25287 / 500 = 50.574 -> 50.57
-    expect(formatPrice(25287, "en")).toBe("$50.57 USD");
+  it("shows colones with no locale", () => {
+    expect(formatPrice(30000)).toMatch(CRC_30K);
   });
 
-  it("uses custom usdToCrc rate", () => {
-    // 6000 / 600 = 10
-    expect(formatPrice(6000, "en", 600)).toBe("$10 USD");
-  });
-
-  it("treats locale prefix correctly", () => {
-    expect(formatPrice(30000, "es-CR")).toMatch(CRC_30K);
-    expect(formatPrice(30000, "en-US")).toBe("$60 USD");
+  it("ignores the conversion rate", () => {
+    expect(formatPrice(30000, "en", 600)).toMatch(CRC_30K);
   });
 
   it("returns ₡0 for invalid input", () => {
     expect(formatPrice(NaN)).toBe("₡0");
     expect(formatPrice(-10)).toBe("₡0");
   });
-
-  it("defaults to Spanish when no locale provided", () => {
-    expect(formatPrice(30000)).toMatch(CRC_30K);
-  });
 });
 
-describe("formatShippingCost", () => {
+describe("formatShippingCost (always colones)", () => {
   it("returns colones for Spanish locale", () => {
     expect(formatShippingCost(2500, "es")).toMatch(CRC_2500);
   });
 
-  it("converts to USD for English locale", () => {
-    // 2500 / 500 = 5
-    expect(formatShippingCost(2500, "en")).toBe("$5 USD");
+  it("returns colones for English locale", () => {
+    expect(formatShippingCost(2500, "en")).toMatch(CRC_2500);
   });
 
   it("returns ₡0 for invalid input", () => {
     expect(formatShippingCost(NaN)).toBe("₡0");
     expect(formatShippingCost(-100)).toBe("₡0");
-  });
-
-  it("uses custom rate", () => {
-    expect(formatShippingCost(6000, "en", 600)).toBe("$10 USD");
   });
 });
 
