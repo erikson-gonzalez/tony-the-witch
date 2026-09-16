@@ -182,9 +182,8 @@ export default function Cart() {
                       return fromItem;
                     const raw = config?.reservation?.price;
                     const n = Number(raw);
-                    if (!Number.isFinite(n)) return 60;
-                    const usdToCrc = config?.pricing?.usdToCrc ?? 500;
-                    return n >= 1000 ? Math.round(n / usdToCrc) : n;
+                    if (!Number.isFinite(n)) return 30000;
+                    return Math.max(0, Math.round(n)); // colones, as-is
                   })()
                 }
                 formErrors={formErrors}
@@ -220,9 +219,8 @@ export default function Cart() {
                       return fromItem;
                     const raw = config?.reservation?.price;
                     const n = Number(raw);
-                    if (!Number.isFinite(n)) return 60;
-                    const usdToCrc = config?.pricing?.usdToCrc ?? 500;
-                    return n >= 1000 ? Math.round(n / usdToCrc) : n;
+                    if (!Number.isFinite(n)) return 30000;
+                    return Math.max(0, Math.round(n)); // colones, as-is
                   })()
                 }
                 shippingCost={

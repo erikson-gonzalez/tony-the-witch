@@ -41,7 +41,7 @@ const CartContext = createContext<CartContextType | null>(null);
 
 const STORAGE_KEY = "ttw-cart";
 
-const DEFAULT_RESERVATION_PRICE = 60;
+const DEFAULT_RESERVATION_PRICE = 30000; // colones
 
 function normalizeItemPrice(item: CartItem): CartItem {
   const p = typeof item.price === "number" && Number.isFinite(item.price)
@@ -75,13 +75,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const reservationItem = useMemo((): Omit<CartItem, "quantity"> | null => {
     const r = config?.reservation;
     if (!r) return null;
-    const usdToCrc = Math.max(1, config?.pricing?.usdToCrc ?? 500);
-    let price = typeof r.price === "number" && Number.isFinite(r.price)
-      ? r.price
-      : Math.max(0, Number(r.price) || 60);
-    if (price >= 1000) {
-      price = Math.round(price / usdToCrc);
-    }
+    // Price is colones, used as-is.
+    const price = typeof r.price === "number" && Number.isFinite(r.price)
+      ? Math.max(0, r.price)
+      : Math.max(0, Number(r.price) || DEFAULT_RESERVATION_PRICE);
     return {
       productId: -1,
       slug: "reserva-sesion-tattoo",
@@ -100,11 +97,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const r = config?.reservation;
     if (!r) return;
-    const usdToCrc = Math.max(1, config?.pricing?.usdToCrc ?? 500);
-    let price = typeof r.price === "number" && Number.isFinite(r.price)
-      ? r.price
+    // Price is colones, used as-is.
+    const price = typeof r.price === "number" && Number.isFinite(r.price)
+      ? Math.max(0, r.price)
       : Math.max(0, Number(r.price) || DEFAULT_RESERVATION_PRICE);
-    if (price >= 1000) price = Math.round(price / usdToCrc);
     setItems((prev) =>
       prev.some((i) => i.isReservation)
         ? prev.map((i) => (i.isReservation ? { ...i, price } : i))

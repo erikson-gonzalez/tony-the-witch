@@ -94,26 +94,27 @@ export function useProductDetail(): UseProductDetailReturn {
       const raw = payInUsd
         ? parseFloat(customAmount.replace(",", ".").replace(/[^\d.]/g, "")) || 0
         : parseInt(customAmount.replace(/\D/g, ""), 10) || 0;
-      let priceUsd: number;
+      // Cart prices are colones. A USD-typed amount converts INTO colones.
+      let priceCrc: number;
       if (payInUsd) {
-        priceUsd = raw;
-        if (priceUsd < 1) {
+        if (raw < 1) {
           toast({ title: t("product.customSessionMinAmount"), variant: "destructive" });
           return;
         }
+        priceCrc = Math.round(raw * usdToCrc);
       } else {
         if (raw < 1000) {
           toast({ title: t("product.customSessionMinAmount"), variant: "destructive" });
           return;
         }
-        priceUsd = raw / usdToCrc;
+        priceCrc = Math.round(raw);
       }
       clearCart();
       addItem({
         productId: -2,
         slug: CUSTOM_SESSION_SLUG,
         name: customSessionConfig.name ?? "TTW Tattoo Session",
-        price: priceUsd,
+        price: priceCrc,
         image: customSessionConfig.imageUrl ?? "/logo-ttw.png",
       });
       setLocation("/cart?buyNow=1");
