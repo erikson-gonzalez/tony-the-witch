@@ -487,7 +487,7 @@ export function AdminConfigPage() {
                     onChange={(e) =>
                       setWhatsappPhone(e.target.value.replace(/\D/g, "").slice(0, 8))
                     }
-                    placeholder="7128 0996"
+                    placeholder="Ej: 7128 0996"
                     maxLength={8}
                     className="flex-1 px-4 py-2 rounded-lg border border-slate-300 bg-white text-slate-900 font-mono focus:ring-2 focus:ring-slate-400 focus:border-transparent"
                   />
@@ -520,7 +520,7 @@ export function AdminConfigPage() {
                           sinpePhoneNumber: e.target.value.replace(/[^\d\s-]/g, "").slice(0, 12),
                         }))
                       }
-                      placeholder="7128 0996"
+                      placeholder="Ej: 7128 0996"
                       className="w-full px-4 py-2 rounded-lg border border-slate-300 bg-white text-slate-900 font-mono focus:ring-2 focus:ring-slate-400 focus:border-transparent"
                     />
                     <p className="text-xs text-slate-400 mt-1">{t("admin.sinpePhoneHint")}</p>
