@@ -109,7 +109,7 @@ export function registerPublicContentRoutes(app: Express) {
               images: p.images,
               sortOrder: p.sortOrder ?? 0,
             }))
-          : getDefaultProducts();
+          : []; // empty shop shows empty — never a fake placeholder product
 
       res.json({
         config,
@@ -140,13 +140,6 @@ function getDefaultGalleryWorks() {
     { id: 1, image: "https://images.unsplash.com/photo-1611501275019-9b5cda994e8d?q=80&w=1200&auto=format&fit=crop", category: "Tatuajes", height: "tall" as const, sortOrder: 0 },
     { id: 2, image: "https://images.unsplash.com/photo-1562962230-16e4623d36e6?q=80&w=1200&auto=format&fit=crop", category: "Pinturas", height: "short" as const, sortOrder: 1 },
     { id: 3, image: "https://images.unsplash.com/photo-1542848284-8afa78a08ccb?q=80&w=1200&auto=format&fit=crop", category: "Cinematografía", height: "medium" as const, sortOrder: 2 },
-  ];
-  return defaults;
-}
-
-function getDefaultProducts() {
-  const defaults = [
-    { id: 1, slug: "ttw-black-tee", name: "TTW Black Tee", category: "Apparel", price: 35, description: "Premium heavyweight cotton tee.", sizes: ["S", "M", "L", "XL", "XXL"], colors: ["Black", "Charcoal"], images: ["https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=800&auto=format&fit=crop"], sortOrder: 0 },
   ];
   return defaults;
 }
