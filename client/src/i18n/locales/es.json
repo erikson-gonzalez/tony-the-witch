@@ -118,7 +118,8 @@
     "errorUpload": "Error al subir la imagen. Intentá de nuevo.",
     "errorSubmitProof": "Error al enviar comprobante. Intentá de nuevo.",
     "sinpeUploadLater": "Subir el comprobante después (te enviaremos un enlace por correo)",
-    "sinpeSubmitting": "Enviando…"
+    "sinpeSubmitting": "Enviando…",
+    "copy": "Copiar"
   },
   "product": {
     "addToCart": "Agregar al carrito",

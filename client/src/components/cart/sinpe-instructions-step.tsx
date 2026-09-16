@@ -34,12 +34,29 @@ export function SinpeInstructionsStep({
   const [error, setError] = useState("");
 
   const copyPhone = useCallback(async () => {
-    try {
-      await navigator.clipboard.writeText(sinpePhone);
+    const markCopied = () => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+    };
+    try {
+      await navigator.clipboard.writeText(sinpePhone);
+      markCopied();
     } catch {
-      // fallback: do nothing
+      // Fallback for browsers that block the async clipboard API
+      try {
+        const ta = document.createElement("textarea");
+        ta.value = sinpePhone;
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+        markCopied();
+      } catch {
+        // give up silently
+      }
     }
   }, [sinpePhone]);
 
@@ -109,21 +126,23 @@ export function SinpeInstructionsStep({
         {/* Phone number */}
         <div className="mb-6">
           <p className="text-xs text-gray-500 mb-1">{t("checkout.sinpePhone")}</p>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <span className="text-2xl md:text-3xl font-mono text-white tracking-wider">
               {sinpePhone}
             </span>
             <button
               onClick={copyPhone}
-              className="p-2 border border-white/20 hover:border-white/40 text-gray-400 hover:text-white transition-colors"
-              title="Copiar"
+              className={`inline-flex items-center gap-2 px-3 py-2 border text-xs uppercase tracking-widest transition-colors ${
+                copied
+                  ? "border-green-400/60 text-green-400"
+                  : "border-white/30 text-gray-300 hover:border-white hover:text-white"
+              }`}
+              title={t("checkout.copy")}
             >
-              {copied ? <Check size={16} className="text-green-400" /> : <Copy size={16} />}
+              {copied ? <Check size={14} /> : <Copy size={14} />}
+              {copied ? t("checkout.sinpeCopied") : t("checkout.copy")}
             </button>
           </div>
-          {copied && (
-            <p className="text-xs text-green-400 mt-1">{t("checkout.sinpeCopied")}</p>
-          )}
         </div>
 
         {/* Account holder */}

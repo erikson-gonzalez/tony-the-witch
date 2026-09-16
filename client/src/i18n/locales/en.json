@@ -118,7 +118,8 @@
     "errorUpload": "Error uploading image. Please try again.",
     "errorSubmitProof": "Error submitting proof. Please try again.",
     "sinpeUploadLater": "Upload the receipt later (we will email you a link)",
-    "sinpeSubmitting": "Sending…"
+    "sinpeSubmitting": "Sending…",
+    "copy": "Copy"
   },
   "product": {
     "addToCart": "Add to Cart",
