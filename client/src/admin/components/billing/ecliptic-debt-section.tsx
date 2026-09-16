@@ -32,7 +32,7 @@ import {
 } from "@/components/ui/dialog";
 import { Plus, Trash2, Settings } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { formatUsd, formatDate } from "./billing-helpers";
+import { formatColones, formatDate } from "./billing-helpers";
 
 interface EclipticDebtSectionProps {
   ecliptic: ReturnType<typeof useEclipticDebt>;
@@ -158,7 +158,7 @@ export function EclipticDebtSection({ ecliptic }: EclipticDebtSectionProps) {
                 </DialogHeader>
                 <div className="space-y-4 py-4">
                   <div>
-                    <Label>Deuda Total (USD)</Label>
+                    <Label>Deuda Total (CRC)</Label>
                     <Input
                       type="number"
                       step="0.01"
@@ -208,7 +208,7 @@ export function EclipticDebtSection({ ecliptic }: EclipticDebtSectionProps) {
                 </DialogHeader>
                 <div className="space-y-4 py-4">
                   <div>
-                    <Label>Monto (USD)</Label>
+                    <Label>Monto (CRC)</Label>
                     <Input
                       type="number"
                       step="0.01"
@@ -260,7 +260,7 @@ export function EclipticDebtSection({ ecliptic }: EclipticDebtSectionProps) {
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
               <span className="text-slate-600">
-                Pagado: {formatUsd(data.totalPaid)} de {formatUsd(data.totalDebt)}
+                Pagado: {formatColones(data.totalPaid)} de {formatColones(data.totalDebt)}
               </span>
               <span className="font-medium text-slate-900">{progressPct}%</span>
             </div>
@@ -269,7 +269,7 @@ export function EclipticDebtSection({ ecliptic }: EclipticDebtSectionProps) {
               <span>
                 Restante:{" "}
                 <span className="font-semibold text-slate-700">
-                  {formatUsd(data.remaining)}
+                  {formatColones(data.remaining)}
                 </span>
               </span>
             </div>
@@ -309,7 +309,7 @@ export function EclipticDebtSection({ ecliptic }: EclipticDebtSectionProps) {
                       {payment.description}
                     </TableCell>
                     <TableCell className="text-right font-mono text-sm font-medium">
-                      {formatUsd(payment.amount)}
+                      {formatColones(payment.amount)}
                     </TableCell>
                     <TableCell>
                       <Button

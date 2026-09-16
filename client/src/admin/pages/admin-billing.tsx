@@ -28,7 +28,7 @@ import { PaymentMethodChart } from "../components/billing/payment-method-chart";
 import { OrderStatusChart } from "../components/billing/order-status-chart";
 import { EclipticDebtSection } from "../components/billing/ecliptic-debt-section";
 import {
-  formatUsd,
+  formatColones,
   PERIOD_OPTIONS,
 } from "../components/billing/billing-helpers";
 
@@ -64,7 +64,7 @@ export function AdminBillingPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <KpiCard
             title="Ingresos Totales"
-            value={analytics ? formatUsd(analytics.totalRevenue) : undefined}
+            value={analytics ? formatColones(analytics.totalRevenue) : undefined}
             icon={DollarSign}
             loading={analyticsLoading}
           />
@@ -76,13 +76,13 @@ export function AdminBillingPage() {
           />
           <KpiCard
             title="Valor Promedio"
-            value={analytics ? formatUsd(analytics.avgOrderValue) : undefined}
+            value={analytics ? formatColones(analytics.avgOrderValue) : undefined}
             icon={TrendingUp}
             loading={analyticsLoading}
           />
           <KpiCard
             title="Deuda Ecliptic"
-            value={ecliptic.data ? formatUsd(ecliptic.data.remaining) : undefined}
+            value={ecliptic.data ? formatColones(ecliptic.data.remaining) : undefined}
             icon={CreditCard}
             loading={ecliptic.isLoading}
             variant={
@@ -170,7 +170,7 @@ export function AdminBillingPage() {
                         {product.unitsSold}
                       </TableCell>
                       <TableCell className="text-right font-mono">
-                        {formatUsd(product.revenue)}
+                        {formatColones(product.revenue)}
                       </TableCell>
                     </TableRow>
                   ))}

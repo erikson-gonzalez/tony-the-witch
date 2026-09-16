@@ -185,7 +185,7 @@ export function useCheckout(
       import("@/hooks/use-analytics").then(({ trackEvent }) =>
         trackEvent("complete_purchase", {
           orderNumber: data.orderNumber,
-          totalUsd: totalPrice,
+          totalCrc: totalPrice,
           items: items.length,
           paymentMethod,
         }),

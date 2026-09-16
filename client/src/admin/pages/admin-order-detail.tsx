@@ -18,7 +18,7 @@ import {
 import { ArrowLeft, Check, X, ExternalLink } from "lucide-react";
 
 // Item/subtotal amounts are CRC céntimos (legacy *Usd field names).
-function formatUsd(centimos: number): string {
+function formatColones(centimos: number): string {
   return `₡${Math.round(centimos / 100).toLocaleString("es-CR")}`;
 }
 
@@ -184,10 +184,10 @@ export function AdminOrderDetailPage() {
                         {item.quantity}
                       </td>
                       <td className="py-2 px-4 text-right text-slate-700">
-                        {formatUsd(item.priceUsd)}
+                        {formatColones(item.priceUsd)}
                       </td>
                       <td className="py-2 pl-4 text-right font-medium text-slate-900">
-                        {formatUsd(item.priceUsd * item.quantity)}
+                        {formatColones(item.priceUsd * item.quantity)}
                       </td>
                     </tr>
                   ))}
@@ -198,7 +198,7 @@ export function AdminOrderDetailPage() {
               <p>
                 <span className="text-slate-500">{t("admin.subtotal")}:</span>{" "}
                 <span className="text-slate-900">
-                  {formatUsd(order.subtotalUsd)}
+                  {formatColones(order.subtotalUsd)}
                 </span>
               </p>
               {order.shippingCrc > 0 && (

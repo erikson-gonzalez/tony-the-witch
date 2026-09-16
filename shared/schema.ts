@@ -504,14 +504,14 @@ export type Refund = typeof refunds.$inferSelect;
 
 export const eclipticDebtConfig = pgTable("ecliptic_debt_config", {
   id: serial("id").primaryKey(),
-  totalDebt: integer("total_debt").notNull(), // cents USD
+  totalDebt: integer("total_debt").notNull(), // céntimos CRC
   notes: text("notes"),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
 export const eclipticPayments = pgTable("ecliptic_payments", {
   id: serial("id").primaryKey(),
-  amount: integer("amount").notNull(), // cents USD
+  amount: integer("amount").notNull(), // céntimos CRC
   description: text("description").notNull(),
   paidAt: timestamp("paid_at").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),

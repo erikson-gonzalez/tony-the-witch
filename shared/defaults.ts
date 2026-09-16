@@ -41,7 +41,7 @@ export const DEFAULT_SITE_CONFIG: SiteConfigData = {
   },
   reservation: {
     name: "Reserva de sesión de tattoo",
-    price: 60,
+    price: 30000,
     imageUrl: "/logo-ttw.png",
   },
   tattooSession: {

@@ -1,5 +1,6 @@
-export function formatUsd(cents: number): string {
-  return `$${(cents / 100).toFixed(2)}`;
+// Amounts are stored in céntimos of CRC (legacy *Usd names). Display as colones.
+export function formatColones(centimos: number): string {
+  return `₡${Math.round(centimos / 100).toLocaleString("es-CR")}`;
 }
 
 export function formatDate(dateStr: string): string {
