@@ -255,7 +255,7 @@
     "reservationServiceName": "Service name",
     "reservationServiceNamePlaceholder": "E.g., Tattoo session reservation",
     "reservationPriceCrc": "Price (CRC)",
-    "reservationPriceHint": "Price is entered in colones. Conversion uses 1 USD = {{rate}} colones (configurable in Pricing).",
+    "reservationPriceHint": "Price is stored in colones, exactly as typed.",
     "reservationImage": "Service image",
     "reservationShareLink": "Share link",
     "reservationShareHint": "Copy this link and share it on Instagram stories, WhatsApp, etc. When opened, the client goes straight to the cart with the reservation.",

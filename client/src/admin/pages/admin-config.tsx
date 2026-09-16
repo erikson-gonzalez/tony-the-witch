@@ -61,12 +61,11 @@ export function AdminConfigPage() {
     };
     const pricing = config.pricing as { usdToCrc?: number } | undefined;
     const usdToCrc = Math.max(1, Number(pricing?.usdToCrc) || 500);
-    // DB stores price in USD; form displays in colones. Detect legacy colones-stored values (>= 1000).
-    const priceUsd =
+    // Price is stored in colones. Legacy USD values (< 1000) are shown converted.
+    const priceColones =
       typeof reservation?.price === "number" && reservation.price >= 1000
-        ? reservation.price / usdToCrc
-        : (Number(reservation?.price) || 60);
-    const priceColones = Math.round(priceUsd * usdToCrc);
+        ? Math.round(reservation.price)
+        : Math.round((Number(reservation?.price) || 60) * usdToCrc);
     setForm({
       heroTitle: hero?.title ?? "",
       heroVideoUrl: hero?.videoUrl ?? "",
@@ -125,7 +124,8 @@ export function AdminConfigPage() {
       reservation: {
         ...(config?.reservation as object),
         name: form.reservationName,
-        price: Math.max(0, parseFormattedAmount(form.reservationPrice, false) || 0) / Math.max(1, parseFormattedAmount(form.usdToCrc, false) || 500),
+        // Stored in colones — what you type is what is saved.
+        price: Math.max(0, parseFormattedAmount(form.reservationPrice, false) || 0),
         imageUrl: form.reservationImageUrl,
       },
       tattooSession: {

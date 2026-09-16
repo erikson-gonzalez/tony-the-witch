@@ -85,7 +85,7 @@ export function CheckoutOnvoStep({
   shippingToConvenir = false,
   hasReservation,
   hasCustomSession,
-  reservationPrice = 60,
+  reservationPrice = 30000,
   formErrors,
   onSuccess,
   onError,

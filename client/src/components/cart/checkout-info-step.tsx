@@ -40,7 +40,7 @@ export function CheckoutInfoStep({
   totalItems,
   locale = "en",
   usdToCrc,
-  reservationPrice = 60,
+  reservationPrice = 30000,
   formErrors,
   hasReservation,
   hasCustomSession,
