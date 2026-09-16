@@ -88,6 +88,9 @@ export function AdminConfigPage() {
       footerBrandText: footer?.brandText ?? "",
       footerCopyright: footer?.copyrightText ?? "",
       usdToCrc: formatAmountWithCommas(String(pricing?.usdToCrc ?? 500), false),
+      shipGamStandard: formatAmountWithCommas(String((config.shipping as any)?.gamStandard ?? 2500), false),
+      shipGamNextDay: formatAmountWithCommas(String((config.shipping as any)?.gamNextDay ?? 5000), false),
+      shipNonGamStandard: formatAmountWithCommas(String((config.shipping as any)?.nonGamStandard ?? 3500), false),
     });
   }, [config]);
 
@@ -146,6 +149,11 @@ export function AdminConfigPage() {
       pricing: {
         ...(config?.pricing as object),
         usdToCrc: Math.max(1, Math.round(parseFormattedAmount(form.usdToCrc, false) || 500)),
+      },
+      shipping: {
+        gamStandard: Math.max(0, Math.round(parseFormattedAmount(form.shipGamStandard, false) || 2500)),
+        gamNextDay: Math.max(0, Math.round(parseFormattedAmount(form.shipGamNextDay, false) || 5000)),
+        nonGamStandard: Math.max(0, Math.round(parseFormattedAmount(form.shipNonGamStandard, false) || 3500)),
       },
     });
     } catch (err) {
@@ -414,6 +422,42 @@ export function AdminConfigPage() {
                 />
                 <p className="text-xs text-slate-500 mt-1.5">
                   {t("admin.exchangeRateHint")}
+                </p>
+              </div>
+              <div className="border-t border-slate-200 pt-4">
+                <h3 className="text-sm font-semibold text-slate-800 mb-3">
+                  {t("admin.shippingCosts")}
+                </h3>
+                <div className="grid gap-4 sm:grid-cols-3">
+                  {([
+                    ["shipGamStandard", "admin.shippingGamStandard"],
+                    ["shipGamNextDay", "admin.shippingGamNextDay"],
+                    ["shipNonGamStandard", "admin.shippingNonGamStandard"],
+                  ] as const).map(([key, label]) => (
+                    <div key={key}>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">
+                        {t(label)}
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <span className="text-slate-500 text-sm">₡</span>
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          value={form[key]}
+                          onChange={(e) =>
+                            setForm((p) => ({
+                              ...p,
+                              [key]: formatAmountWithCommas(e.target.value.replace(/\D/g, ""), false),
+                            }))
+                          }
+                          className="w-full px-4 py-2 rounded-lg border border-slate-300 bg-white text-slate-900 focus:ring-2 focus:ring-slate-400 focus:border-transparent"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-xs text-slate-500 mt-1.5">
+                  {t("admin.shippingCostsHint")}
                 </p>
               </div>
             </div>

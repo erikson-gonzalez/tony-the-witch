@@ -118,6 +118,13 @@ export const siteConfigDataSchema = z.object({
       usdToCrc: z.number().min(1),
     })
     .optional(),
+  shipping: z
+    .object({
+      gamStandard: z.number().min(0),
+      gamNextDay: z.number().min(0),
+      nonGamStandard: z.number().min(0),
+    })
+    .optional(),
   sinpe: z
     .object({
       phoneNumber: z.string(),

@@ -13,7 +13,9 @@ import {
   getShippingCost,
   getAvailableMethods,
   SHIPPING_COSTS,
+  type ShippingConfig,
 } from "@/utils/shipping";
+import { useContent } from "@/hooks/use-content";
 import { formatPrice, formatShippingCost } from "@/utils/formatPrice";
 import { ShippingZoneModal } from "./shipping-zone-modal";
 import { PROVINCIAS_CR } from "@/constants/provincias-cr";
@@ -50,9 +52,11 @@ export function CheckoutInfoStep({
   onBack,
 }: CheckoutInfoStepProps) {
   const { t } = useTranslation();
+  const { config } = useContent();
+  const shippingConfig = config?.shipping as ShippingConfig | undefined;
   const shippingCost =
     needsShipping && form.shippingZone && form.shippingMethod
-      ? getShippingCost(form.shippingZone, form.shippingMethod)
+      ? getShippingCost(form.shippingZone, form.shippingMethod, shippingConfig)
       : 0;
   const displayTotal = totalPrice;
   const methods = form.shippingZone ? getAvailableMethods(form.shippingZone) : [];
@@ -267,12 +271,11 @@ export function CheckoutInfoStep({
                           </button>
                         );
                       }
-                      const cost =
-                        form.shippingZone === "GAM"
-                          ? method === "STANDARD"
-                            ? SHIPPING_COSTS.GAM.STANDARD
-                            : SHIPPING_COSTS.GAM.NEXT_DAY
-                          : SHIPPING_COSTS.NON_GAM.STANDARD;
+                      const cost = getShippingCost(
+                        form.shippingZone ?? "GAM",
+                        method,
+                        shippingConfig
+                      );
                       return (
                         <button
                           key={method}

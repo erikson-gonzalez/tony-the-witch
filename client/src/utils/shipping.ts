@@ -18,24 +18,31 @@ export function needsShipping(items: CartItem[]): boolean {
   return items.some((i) => !i.isReservation && !isGiftCard(i) && !isCustomSession(i));
 }
 
-/** Shipping costs in colones (CRC) */
+/** Default shipping costs in colones (CRC); admin can override via site config */
 export const SHIPPING_COSTS = {
   GAM: { STANDARD: 2500, NEXT_DAY: 5000 },
   NON_GAM: { STANDARD: 3500 },
   INTERNATIONAL: { A_CONVENIR: 0 },
 } as const;
 
+export interface ShippingConfig {
+  gamStandard?: number;
+  gamNextDay?: number;
+  nonGamStandard?: number;
+}
+
 export function getShippingCost(
   zone: ShippingZone,
-  method: ShippingMethod
+  method: ShippingMethod,
+  shipping?: ShippingConfig
 ): number {
   if (zone === "INTERNATIONAL") return 0;
   if (zone === "GAM") {
     return method === "STANDARD"
-      ? SHIPPING_COSTS.GAM.STANDARD
-      : SHIPPING_COSTS.GAM.NEXT_DAY;
+      ? shipping?.gamStandard ?? SHIPPING_COSTS.GAM.STANDARD
+      : shipping?.gamNextDay ?? SHIPPING_COSTS.GAM.NEXT_DAY;
   }
-  return SHIPPING_COSTS.NON_GAM.STANDARD;
+  return shipping?.nonGamStandard ?? SHIPPING_COSTS.NON_GAM.STANDARD;
 }
 
 export function getAvailableMethods(zone: ShippingZone): ShippingMethod[] {

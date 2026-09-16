@@ -414,6 +414,11 @@
     "removeFile": "Remove",
     "onlyImages": "Only images (JPEG, PNG, WebP, GIF, SVG).",
     "onlyVideos": "Only videos (MP4, WebM, OGG, QuickTime).",
-    "uploadError": "Error uploading file."
+    "uploadError": "Error uploading file.",
+    "shippingCosts": "Shipping costs (CRC)",
+    "shippingGamStandard": "GAM — Standard (Correos)",
+    "shippingGamNextDay": "GAM — Next day (Uber Flash)",
+    "shippingNonGamStandard": "Outside GAM — Standard",
+    "shippingCostsHint": "Amounts in colones. Applied at checkout for physical products."
   }
 }

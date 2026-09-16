@@ -225,7 +225,7 @@ export default function Cart() {
                 }
                 shippingCost={
                   needsShipping(items) && form.shippingZone && form.shippingMethod
-                    ? getShippingCost(form.shippingZone, form.shippingMethod)
+                    ? getShippingCost(form.shippingZone, form.shippingMethod, config?.shipping)
                     : 0
                 }
                 shippingToConvenir={

@@ -64,6 +64,11 @@ export const DEFAULT_SITE_CONFIG: SiteConfigData = {
   pricing: {
     usdToCrc: 500,
   },
+  shipping: {
+    gamStandard: 2500,
+    gamNextDay: 5000,
+    nonGamStandard: 3500,
+  },
   sinpe: {
     phoneNumber: "",
     accountHolder: "",

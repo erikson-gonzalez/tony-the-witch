@@ -21,6 +21,7 @@ export interface SiteConfig {
   reservation: { name: string; price: number; imageUrl: string };
   tattooSession?: { name: string; imageUrl: string; description?: string; descriptionEs?: string; descriptionEn?: string };
   pricing?: { usdToCrc?: number };
+  shipping?: { gamStandard?: number; gamNextDay?: number; nonGamStandard?: number };
   gallery: {
     categories: string[];
     instagramUrl: string;

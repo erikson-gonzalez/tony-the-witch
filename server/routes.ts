@@ -154,7 +154,7 @@ export async function registerRoutes(
 
       // Compute shipping in CRC
       const shippingCrc = input.shippingAddress
-        ? getShippingCost(input.shippingZone, input.shippingMethod)
+        ? getShippingCost(input.shippingZone, input.shippingMethod, config.shipping)
         : 0;
 
       // Prices are CRC. The *Usd columns hold CRC céntimos (legacy names).
@@ -455,10 +455,11 @@ export async function registerRoutes(
 function getShippingCost(
   zone?: string,
   method?: string,
+  shipping?: { gamStandard?: number; gamNextDay?: number; nonGamStandard?: number },
 ): number {
   if (!zone || !method) return 0;
-  if (zone === "GAM" && method === "STANDARD") return 2500;
-  if (zone === "GAM" && method === "NEXT_DAY") return 5000;
-  if (zone === "NON_GAM" && method === "STANDARD") return 3500;
+  if (zone === "GAM" && method === "STANDARD") return shipping?.gamStandard ?? 2500;
+  if (zone === "GAM" && method === "NEXT_DAY") return shipping?.gamNextDay ?? 5000;
+  if (zone === "NON_GAM" && method === "STANDARD") return shipping?.nonGamStandard ?? 3500;
   return 0;
 }
