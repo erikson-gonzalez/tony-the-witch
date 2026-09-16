@@ -145,9 +145,10 @@ export async function registerRoutes(
         ? getShippingCost(input.shippingZone, input.shippingMethod)
         : 0;
 
-      // Total USD = subtotal (shipping is in CRC, added to CRC total only)
+      // Prices are CRC. The *Usd columns hold CRC céntimos (legacy names).
+      // totalCrc = whole colones, including shipping.
       const totalUsd = subtotalUsd;
-      const totalCrc = Math.round(totalUsd * usdToCrc / 100) + shippingCrc;
+      const totalCrc = Math.round(totalUsd / 100) + shippingCrc;
 
       const order = await createOrder({
         ...input,

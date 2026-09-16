@@ -27,10 +27,6 @@ function formatDate(dateStr: string, t: (key: string) => string): string {
   });
 }
 
-function formatUsd(cents: number): string {
-  return `$${(cents / 100).toFixed(2)}`;
-}
-
 function formatCrc(colones: number): string {
   return `₡${colones.toLocaleString("es-CR")}`;
 }
@@ -178,10 +174,7 @@ export function AdminOrdersPage() {
                           <Link href={`/admin/orders/${order.id}`}>
                             <a className="block">
                               <span className="text-slate-900 font-medium">
-                                {formatUsd(order.totalUsd)}
-                              </span>
-                              <span className="text-slate-500 ml-1">
-                                / {formatCrc(order.totalCrc)}
+                                {formatCrc(order.totalCrc)}
                               </span>
                             </a>
                           </Link>

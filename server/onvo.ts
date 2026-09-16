@@ -271,11 +271,11 @@ export type OnvoRefund = z.infer<typeof onvoRefundSchema>;
 // =============================================================================
 
 // ONVO supports more currencies (GTQ/NIO/PAB/PEN/MXN/COP/HNL); we only use
-// USD for cards. CRC reserved if we ever wire SINPE Móvil (out of v1 scope).
+// Cards charge in CRC (store prices are colones). USD kept for tooling/tests.
 export type OnvoCurrency = "USD" | "CRC";
 
 export interface CreatePaymentIntentInput {
-  amount: number; // smallest currency unit (cents for USD, colones for CRC)
+  amount: number; // smallest currency unit (cents for USD, céntimos ×100 for CRC — per ONVO docs)
   currency: OnvoCurrency;
   captureMethod?: "automatic" | "manual";
   description?: string;

@@ -17,8 +17,9 @@ import {
 } from "@/components/ui/alert-dialog";
 import { ArrowLeft, Check, X, ExternalLink } from "lucide-react";
 
-function formatUsd(cents: number): string {
-  return `$${(cents / 100).toFixed(2)}`;
+// Item/subtotal amounts are CRC céntimos (legacy *Usd field names).
+function formatUsd(centimos: number): string {
+  return `₡${Math.round(centimos / 100).toLocaleString("es-CR")}`;
 }
 
 function formatCrc(colones: number): string {
@@ -211,7 +212,7 @@ export function AdminOrderDetailPage() {
               <p className="font-medium text-base">
                 <span className="text-slate-500">{t("admin.tableTotal")}:</span>{" "}
                 <span className="text-slate-900">
-                  {formatUsd(order.totalUsd)} / {formatCrc(order.totalCrc)}
+                  {formatCrc(order.totalCrc)}
                 </span>
               </p>
             </div>

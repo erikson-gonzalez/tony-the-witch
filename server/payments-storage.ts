@@ -57,6 +57,7 @@ export async function createOrFindActivePayment(
           payment_method: string;
           payment_status: string;
           total_usd: number;
+          total_crc: number;
           customer_email: string;
           customer_name: string;
         }
@@ -77,7 +78,7 @@ export async function createOrFindActivePayment(
         "wrong_status",
       );
     }
-    if (orderRow.total_usd <= 0) {
+    if (orderRow.total_crc <= 0) {
       throw new PaymentNotAllowedError("Order total is zero", "amount_zero");
     }
 
@@ -95,8 +96,9 @@ export async function createOrFindActivePayment(
     }
 
     const intent = await onvoCreatePaymentIntent({
-      amount: orderRow.total_usd, // already cents
-      currency: "USD",
+      // total_crc is whole colones (shipping included); ONVO wants céntimos.
+      amount: orderRow.total_crc * 100,
+      currency: "CRC",
       description: `Tony The Witch order #${orderId}`,
       // ONVO does not accept a `customer` object on the intent (only customerId).
       // Carry contact via metadata for now; saved-card / Customer is deferred.
@@ -114,8 +116,8 @@ export async function createOrFindActivePayment(
         provider: "onvo",
         providerIntentId: intent.id,
         methodType: "card",
-        amountCents: orderRow.total_usd,
-        currency: "USD",
+        amountCents: orderRow.total_crc * 100,
+        currency: "CRC",
         state: mapOnvoStatusToLifecycle(intent.status),
         rawCreate: intent as unknown as Record<string, unknown>,
       })

@@ -129,8 +129,9 @@ function getAppUrl(): string {
   return "http://localhost:5000";
 }
 
-function formatUsd(cents: number): string {
-  return `$${(cents / 100).toFixed(2)}`;
+// Item/subtotal amounts are CRC céntimos (legacy *Usd field names).
+function formatUsd(centimos: number): string {
+  return `₡${Math.round(centimos / 100).toLocaleString("es-CR")}`;
 }
 
 function formatCrc(colones: number): string {
@@ -258,7 +259,7 @@ export function buildOrderAdminNotification(order: Order): {
       <div style="margin-top:12px;text-align:right;font-size:14px;color:#334155">
         <p style="margin:4px 0"><span style="color:#64748b">Subtotal:</span> ${formatUsd(order.subtotalUsd)}</p>
         ${order.shippingCrc > 0 ? `<p style="margin:4px 0"><span style="color:#64748b">Envío:</span> ${formatCrc(order.shippingCrc)}</p>` : ""}
-        <p style="margin:4px 0;font-weight:600">Total: ${formatUsd(order.totalUsd)} / ${formatCrc(order.totalCrc)}</p>
+        <p style="margin:4px 0;font-weight:600">Total: ${formatCrc(order.totalCrc)}</p>
       </div>
 
       ${proofSection}
@@ -289,9 +290,7 @@ export function buildOrderCustomerConfirmation(order: Order): {
   const firstName = order.customerName.split(" ")[0];
 
   const isSinpe = order.paymentMethod === "sinpe";
-  const totalDisplay = isSinpe
-    ? formatCrc(order.totalCrc)
-    : formatUsd(order.totalUsd);
+  const totalDisplay = formatCrc(order.totalCrc);
 
   const sinpeReminder = isSinpe
     ? `<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:12px 16px;margin:16px 0;font-size:13px;color:#92400e">
