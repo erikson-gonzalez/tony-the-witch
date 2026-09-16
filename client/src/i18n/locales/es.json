@@ -150,7 +150,10 @@
     "continueShopping": "Seguir comprando"
   },
   "footer": {
-    "poweredBy": "Powered by"
+    "poweredBy": "Powered by",
+    "terms": "Términos",
+    "privacy": "Privacidad",
+    "refunds": "Reembolsos"
   },
   "shipping": {
     "zoneTitle": "Zonas de envío",

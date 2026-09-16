@@ -15,6 +15,18 @@ import Cart from "@/pages/Cart";
 import OrderStatus from "@/pages/OrderStatus";
 import NotFound from "@/pages/not-found";
 
+const Terms = lazy(() => import("@/pages/legal/Terms"));
+const Privacy = lazy(() => import("@/pages/legal/Privacy"));
+const RefundPolicy = lazy(() => import("@/pages/legal/RefundPolicy"));
+
+function LegalSuspense({ children }: { children: React.ReactNode }) {
+  return (
+    <Suspense fallback={<div className="bg-black min-h-screen" />}>
+      {children}
+    </Suspense>
+  );
+}
+
 // Lazy-load admin pages — not needed for public visitors
 const AdminDashboardPage = lazy(() => import("@/admin/pages/admin-dashboard").then(m => ({ default: m.AdminDashboardPage })));
 const AdminConfigPage = lazy(() => import("@/admin/pages/admin-config").then(m => ({ default: m.AdminConfigPage })));
@@ -89,6 +101,15 @@ function Router() {
         <Route path="/shop/:slug" component={ProductDetail} />
         <Route path="/order/:orderNumber" component={OrderStatus} />
         <Route path="/cart" component={Cart} />
+        <Route path="/terms">
+          <LegalSuspense><Terms /></LegalSuspense>
+        </Route>
+        <Route path="/privacy">
+          <LegalSuspense><Privacy /></LegalSuspense>
+        </Route>
+        <Route path="/refund-policy">
+          <LegalSuspense><RefundPolicy /></LegalSuspense>
+        </Route>
         <Route component={NotFound} />
       </Switch>
     </>

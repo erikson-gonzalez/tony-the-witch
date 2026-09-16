@@ -56,6 +56,17 @@ export function Footer() {
           >
             {footer.brandText}
           </div>
+          <div className="flex flex-wrap justify-center items-center gap-x-4 gap-y-1 mb-3 text-xs tracking-wider">
+            <a href="/terms" className="text-gray-400 hover:text-white transition-colors" data-testid="link-footer-terms">
+              {t("footer.terms")}
+            </a>
+            <a href="/privacy" className="text-gray-400 hover:text-white transition-colors" data-testid="link-footer-privacy">
+              {t("footer.privacy")}
+            </a>
+            <a href="/refund-policy" className="text-gray-400 hover:text-white transition-colors" data-testid="link-footer-refunds">
+              {t("footer.refunds")}
+            </a>
+          </div>
           <div className="text-gray-400 text-xs tracking-wider text-center px-4 flex flex-wrap justify-center items-center gap-x-1 gap-y-1">
             <span>&copy; {new Date().getFullYear()} {footer.copyrightText}</span>
             <span className="hidden sm:inline">/</span>
