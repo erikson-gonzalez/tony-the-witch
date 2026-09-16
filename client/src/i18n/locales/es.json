@@ -119,7 +119,8 @@
     "errorSubmitProof": "Error al enviar comprobante. Intentá de nuevo.",
     "sinpeUploadLater": "Subir el comprobante después (te enviaremos un enlace por correo)",
     "sinpeSubmitting": "Enviando…",
-    "copy": "Copiar"
+    "copy": "Copiar",
+    "sinpeNoPhone": "Número SINPE no configurado. Contactanos por WhatsApp."
   },
   "product": {
     "addToCart": "Agregar al carrito",
@@ -422,6 +423,11 @@
     "shippingGamStandard": "GAM — Estándar (Correos)",
     "shippingGamNextDay": "GAM — Día siguiente (Uber Flash)",
     "shippingNonGamStandard": "Fuera de GAM — Estándar",
-    "shippingCostsHint": "Montos en colones. Se aplican al checkout de productos físicos."
+    "shippingCostsHint": "Montos en colones. Se aplican al checkout de productos físicos.",
+    "sinpeSection": "SINPE Móvil (pagos)",
+    "sinpePhone": "Número SINPE Móvil",
+    "sinpePhoneHint": "Este número se muestra al cliente en el checkout. Sin él, SINPE no funciona.",
+    "sinpeAccountHolder": "Titular de la cuenta",
+    "sinpeBankName": "Banco (opcional)"
   }
 }

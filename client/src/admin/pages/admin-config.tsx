@@ -88,6 +88,9 @@ export function AdminConfigPage() {
       footerBrandText: footer?.brandText ?? "",
       footerCopyright: footer?.copyrightText ?? "",
       usdToCrc: formatAmountWithCommas(String(pricing?.usdToCrc ?? 500), false),
+      sinpePhoneNumber: (config.sinpe as any)?.phoneNumber ?? "",
+      sinpeAccountHolder: (config.sinpe as any)?.accountHolder ?? "",
+      sinpeBankName: (config.sinpe as any)?.bankName ?? "",
       shipGamStandard: formatAmountWithCommas(String((config.shipping as any)?.gamStandard ?? 2500), false),
       shipGamNextDay: formatAmountWithCommas(String((config.shipping as any)?.gamNextDay ?? 5000), false),
       shipNonGamStandard: formatAmountWithCommas(String((config.shipping as any)?.nonGamStandard ?? 3500), false),
@@ -149,6 +152,12 @@ export function AdminConfigPage() {
       pricing: {
         ...(config?.pricing as object),
         usdToCrc: Math.max(1, Math.round(parseFormattedAmount(form.usdToCrc, false) || 500)),
+      },
+      sinpe: {
+        ...(config?.sinpe as object),
+        phoneNumber: (form.sinpePhoneNumber ?? "").trim(),
+        accountHolder: (form.sinpeAccountHolder ?? "").trim(),
+        bankName: (form.sinpeBankName ?? "").trim(),
       },
       shipping: {
         gamStandard: Math.max(0, Math.round(parseFormattedAmount(form.shipGamStandard, false) || 2500)),
@@ -492,6 +501,42 @@ export function AdminConfigPage() {
                 value={form.instagramUrl}
                 onChange={(v) => setForm((p) => ({ ...p, instagramUrl: v }))}
               />
+              <div className="border-t border-slate-200 pt-4">
+                <h3 className="text-sm font-semibold text-slate-800 mb-3">
+                  {t("admin.sinpeSection")}
+                </h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      {t("admin.sinpePhone")}
+                    </label>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={form.sinpePhoneNumber ?? ""}
+                      onChange={(e) =>
+                        setForm((p) => ({
+                          ...p,
+                          sinpePhoneNumber: e.target.value.replace(/[^\d\s-]/g, "").slice(0, 12),
+                        }))
+                      }
+                      placeholder="7128 0996"
+                      className="w-full px-4 py-2 rounded-lg border border-slate-300 bg-white text-slate-900 font-mono focus:ring-2 focus:ring-slate-400 focus:border-transparent"
+                    />
+                    <p className="text-xs text-slate-400 mt-1">{t("admin.sinpePhoneHint")}</p>
+                  </div>
+                  <InputField
+                    label={t("admin.sinpeAccountHolder")}
+                    value={form.sinpeAccountHolder ?? ""}
+                    onChange={(v) => setForm((p) => ({ ...p, sinpeAccountHolder: v }))}
+                  />
+                  <InputField
+                    label={t("admin.sinpeBankName")}
+                    value={form.sinpeBankName ?? ""}
+                    onChange={(v) => setForm((p) => ({ ...p, sinpeBankName: v }))}
+                  />
+                </div>
+              </div>
             </div>
           )}
 

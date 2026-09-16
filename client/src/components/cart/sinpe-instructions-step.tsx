@@ -126,23 +126,27 @@ export function SinpeInstructionsStep({
         {/* Phone number */}
         <div className="mb-6">
           <p className="text-xs text-gray-500 mb-1">{t("checkout.sinpePhone")}</p>
-          <div className="flex flex-wrap items-center gap-3">
-            <span className="text-2xl md:text-3xl font-mono text-white tracking-wider">
-              {sinpePhone}
-            </span>
-            <button
-              onClick={copyPhone}
-              className={`inline-flex items-center gap-2 px-3 py-2 border text-xs uppercase tracking-widest transition-colors ${
-                copied
-                  ? "border-green-400/60 text-green-400"
-                  : "border-white/30 text-gray-300 hover:border-white hover:text-white"
-              }`}
-              title={t("checkout.copy")}
-            >
-              {copied ? <Check size={14} /> : <Copy size={14} />}
-              {copied ? t("checkout.sinpeCopied") : t("checkout.copy")}
-            </button>
-          </div>
+          {sinpePhone ? (
+            <>
+              <p className="text-3xl md:text-4xl font-mono font-bold text-amber-400 tracking-wider mb-3">
+                {sinpePhone}
+              </p>
+              <button
+                onClick={copyPhone}
+                className={`inline-flex items-center gap-2 px-4 py-2.5 border text-xs uppercase tracking-widest transition-colors ${
+                  copied
+                    ? "border-green-400/60 text-green-400"
+                    : "border-amber-400/60 text-amber-400 hover:bg-amber-400 hover:text-black"
+                }`}
+                title={t("checkout.copy")}
+              >
+                {copied ? <Check size={14} /> : <Copy size={14} />}
+                {copied ? t("checkout.sinpeCopied") : `${t("checkout.copy")} ${sinpePhone}`}
+              </button>
+            </>
+          ) : (
+            <p className="text-sm text-red-400">{t("checkout.sinpeNoPhone")}</p>
+          )}
         </div>
 
         {/* Account holder */}

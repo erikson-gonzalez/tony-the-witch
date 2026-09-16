@@ -119,7 +119,8 @@
     "errorSubmitProof": "Error submitting proof. Please try again.",
     "sinpeUploadLater": "Upload the receipt later (we will email you a link)",
     "sinpeSubmitting": "Sending…",
-    "copy": "Copy"
+    "copy": "Copy",
+    "sinpeNoPhone": "SINPE number not configured. Contact us on WhatsApp."
   },
   "product": {
     "addToCart": "Add to Cart",
@@ -422,6 +423,11 @@
     "shippingGamStandard": "GAM — Standard (Correos)",
     "shippingGamNextDay": "GAM — Next day (Uber Flash)",
     "shippingNonGamStandard": "Outside GAM — Standard",
-    "shippingCostsHint": "Amounts in colones. Applied at checkout for physical products."
+    "shippingCostsHint": "Amounts in colones. Applied at checkout for physical products.",
+    "sinpeSection": "SINPE Móvil (payments)",
+    "sinpePhone": "SINPE Móvil number",
+    "sinpePhoneHint": "Shown to the customer at checkout. Without it, SINPE does not work.",
+    "sinpeAccountHolder": "Account holder",
+    "sinpeBankName": "Bank (optional)"
   }
 }
